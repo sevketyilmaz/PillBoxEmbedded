@@ -1,5 +1,11 @@
 /*
 
+Sound(Buzzer) -> PA8
+
+*/
+
+/*
+
 SCL -> PB8
 SDA -> PB9
 
@@ -21,6 +27,7 @@ PE10
 
 4 pin Stepper Motor
 
+---------------------------------------
 STEPS | STEP1 | STEP2 | STEP3 | STEP4 |
 ---------------------------------------
 PE7   |   1   |   0   |   0   |   0   |
@@ -34,6 +41,7 @@ PE10  |   0   |   0   |   0   |   1   |
 
 5 pin Stepper Motor
 
+---------------------------------------
 STEPS | STEP1 | STEP2 | STEP3 | STEP4 |
 ---------------------------------------
 PE7   |   0   |   0   |   1   |   1   |
@@ -74,6 +82,7 @@ uint8_t write_byte=255;
 struct tm t;
 time_t t_of_day;
 
+int k;
 
 void button_init(void);
 int main(void) {
@@ -95,13 +104,12 @@ int main(void) {
 	Init_I2C();
 	button_init();
 	
-	/*
+
   //How to write and read data from EEPROM
 	I2C_writeBytes(0x50<<1, 0, 1, &write_byte);		
 	I2C_readBytes(0x50<<1, 0, 1, &read_byte);	
 	if(read_byte == 255)
-	STM_EVAL_LEDOn(LED6);
-	*/
+		STM_EVAL_LEDOn(LED6);
 	
 	/*
 	//How to get milisecond from time
@@ -119,11 +127,16 @@ int main(void) {
 	printf("Initilazation finish....\n");
 	
 	STM_EVAL_LEDOn(LED3);
+
+	TIM1->CCR1 = 0;
 	
 	while (1) {
 		
 		if(GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_0))	{
-				sendTime();
+			sendTime();
+			for(k=0;k<5;k++){
+				readAlarmtoEEPROM(k);
+			}
 		}
 				
 		if(flag_usart == 1){

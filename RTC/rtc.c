@@ -6,8 +6,10 @@
 #include "rtc.h"
 #include "usart.h"
 #include "delay.h"
+#include "pillbox.h"
 
 char str_rtc[50];
+uint8_t alarmtimecounter = 0,alarmok = 0;
 
 void rtc_init() {
     RTC_InitTypeDef RTC_InitStructure;
@@ -48,8 +50,9 @@ void rtc_init() {
 				RTC_ClearITPendingBit(RTC_IT_WUT);
         EXTI_ClearITPendingBit(EXTI_Line22);
 			
-		RTC_InitStructure.RTC_AsynchPrediv = 0x7F;
+		RTC_InitStructure.RTC_AsynchPrediv = 0x7F; //NEDIR????????
 		RTC_InitStructure.RTC_SynchPrediv =  0xFF;
+			
 		RTC_InitStructure.RTC_HourFormat = RTC_HourFormat_24;
 		RTC_Init(&RTC_InitStructure);
 		
@@ -64,7 +67,7 @@ void rtc_init() {
 
 void rtc_alarm_init() {
 	
-//	RTC_AlarmTypeDef RTC_AlarmStructure;
+	//RTC_AlarmTypeDef RTC_AlarmStructure;
 	NVIC_InitTypeDef NVIC_InitStructur;
 	EXTI_InitTypeDef EXTI_InitStructure;
 	
@@ -99,6 +102,7 @@ void rtc_alarm_init() {
 	//RTC_AlarmStructure.RTC_AlarmTime.RTC_Hours = 12;
 	//RTC_AlarmStructure.RTC_AlarmTime.RTC_Minutes = 34;
 	//RTC_AlarmStructure.RTC_AlarmTime.RTC_Seconds = 30;
+	//RTC_AlarmStructure.
 	//RTC_SetAlarm(RTC_Format_BIN, RTC_Alarm_A, &RTC_AlarmStructure);
 
 	RTC_ITConfig(RTC_IT_ALRA, ENABLE);
@@ -127,7 +131,13 @@ void RTC_Alarm_IRQHandler(void) {
 		RTC_ClearITPendingBit(RTC_IT_ALRA);
 		EXTI_ClearITPendingBit(EXTI_Line17);
 		
-		STM_EVAL_LEDOn(LED3);
+		STM_EVAL_LEDToggle(LED5);
+		
+		alarmok = 1;
+		alarmtimecounter = 30;
+		TIM1->CCR1 = 20;
+		which_alarm_created++;
+		create_one_alarm(boxes.pillbox[which_alarm_created].alarmTime);
 	}	
 }
 
@@ -138,5 +148,14 @@ void RTC_WKUP_IRQHandler(void)
     RTC_ClearITPendingBit(RTC_IT_WUT);
     EXTI_ClearITPendingBit(EXTI_Line22);
 		
+		if(alarmok == 1)
+			alarmtimecounter--;
+		if(alarmtimecounter == 0 && alarmok == 1){
+
+				TIM1->CCR1 = 0;
+				alarmok = 0;
+		}
+		if(alarmtimecounter == 0)
+			alarmtimecounter = 30;
 	}	
 }

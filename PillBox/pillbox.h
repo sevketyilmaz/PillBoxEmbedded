@@ -36,12 +36,14 @@ struct Boxes{
 
 
 extern struct Boxes boxes;
+extern uint8_t which_alarm_created;
 
 void createAlarm(uint8_t hour, uint8_t minutes, uint8_t dayOfWeek);
 uint8_t getVariable(char variable[50]);
 void writeAlarmtoEEPROM(uint8_t boxnumbers);
+void readAlarmtoEEPROM(uint8_t boxnumbers);
 
-void usart_create_alarm(void);
+void create_one_alarm(time_t alarm_time);
 void usart_set_time(time_t current_time);
 void usart_interrup_main(void);
 

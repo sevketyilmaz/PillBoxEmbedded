@@ -12,11 +12,15 @@
 #include "pillbox.h"
 #include "usart.h"
 #include "delay.h"
+#include "i2c.h"
 
 #include "String.h"
 #include "Jansson.h"
 
 struct Boxes boxes;
+uint8_t which_alarm_created;
+
+time_t alarmtime;
 
 
 char *token;
@@ -48,7 +52,7 @@ void createAlarm(uint8_t hour, uint8_t minutes, uint8_t dayOfWeek) {
 				RTC_ITConfig(RTC_IT_ALRA, ENABLE);
 				RTC_AlarmCmd(RTC_Alarm_A, ENABLE);
 };
-
+/*
 uint8_t getVariable(char variable[50]){
 			  
 	      uint8_t hour, minute, dayOfWeek, creatingorder, boxnumbers;
@@ -70,79 +74,66 @@ uint8_t getVariable(char variable[50]){
 					//boxes.pillbox[boxnumbers-1].box_open_close = 1;
 					//boxes.pillbox[boxnumbers-1].alarm_creating_order = creatingorder;
 				//}
-				/*
-				if(boxnumbers == 2) {
-										
-					Boxes.pillbox[1].alarm_time.hour = hour;
-					Boxes.pillbox[1].alarm_time.minute = minute;
-					Boxes.pillbox[1].alarm_time.dayofweek = dayOfWeek;
-					
-					Boxes.pillbox[1].alarm_created = 0;
-					Boxes.pillbox[1].alarm_ok = 0;
-					Boxes.pillbox[1].box_open_close = 1;
-					Boxes.pillbox[1].alarm_creating_order = creatingorder;
-				}
-				
-				if(boxnumbers == 3) {
-										
-					Boxes.pillbox[2].alarm_time.hour = hour;
-					Boxes.pillbox[2].alarm_time.minute = minute;
-					Boxes.pillbox[2].alarm_time.dayofweek = dayOfWeek;
-					
-					Boxes.pillbox[2].alarm_created = 0;
-					Boxes.pillbox[2].alarm_ok = 0;
-					Boxes.pillbox[2].box_open_close = 1;
-					Boxes.pillbox[2].alarm_creating_order = creatingorder;
-				}
-				*/
 				return boxnumbers;
 };
-
+*/
 void writeAlarmtoEEPROM(uint8_t boxnumbers){
-
-		uint8_t data[9], start_address, end_address, length, byte_size=9; 
+		uint8_t byte_size = 8; // Number of byte for each boxes
+		uint8_t start_address;
+		//uint8_t end_address, length; 
 		
-		//data[0] = boxes.pillbox[boxnumbers-1].alarm_date.date;
-		//data[1] = boxes.pillbox[boxnumbers-1].alarm_date.mounth;
-		//data[2] = boxes.pillbox[boxnumbers-1].alarm_date.year;
-			
-		//data[3] =	boxes.pillbox[boxnumbers-1].alarm_time.hour;
-		//data[4] =	boxes.pillbox[boxnumbers-1].alarm_time.minute;
-		//data[5] =	boxes.pillbox[boxnumbers-1].alarm_time.dayofweek;
-		 			
-		//data[6] = boxes.pillbox[boxnumbers-1].alarm_created;
-		//data[7] =	boxes.pillbox[boxnumbers-1].alarm_ok;
-		//data[8] = boxes.pillbox[boxnumbers-1].box_open_close;
+		start_address = 1 + byte_size * boxnumbers;
+		//end_address =  byte_size * (boxnumbers + 1);
+		//length = end_address-start_address + 1;
 	
-		start_address = 1 + byte_size*(boxnumbers - 1);
-		end_address = 9 + byte_size*(boxnumbers - 1);
-		length = end_address-start_address + 1;
-	
-	  eeprom_write_page(0x50<<1, start_address, data, length );
+	  eeprom_write_long(0x50<<1, start_address, boxes.pillbox[boxnumbers].alarmTime);
+		eeprom_write_byte(0x50<<1, start_address+4, boxes.pillbox[boxnumbers].box_state);		
+		eeprom_write_byte(0x50<<1, start_address+5,	boxes.pillbox[boxnumbers].alarm_created);		
+		eeprom_write_byte(0x50<<1, start_address+6,	boxes.pillbox[boxnumbers].alarm_creating_order);		
+		eeprom_write_byte(0x50<<1, start_address+7,	boxes.pillbox[boxnumbers].alarm_ok);		
 }
 
-void usart_create_alarm(){
+void readAlarmtoEEPROM(uint8_t boxnumbers){
+		uint8_t byte_size = 8; // Number of byte for each boxes
+		uint8_t start_address;
+		//uint8_t end_address, length; 
+	  int read_data;
+		uint8_t flag;
 	
-	int alarm_date, alarm_month, alarm_year, alarm_dayofweek, alarm_hours, alarm_minutes, alarm_seconds;
-	int box_number;
-	char * e;
-	time_t received_alarm;
-	struct tm *alarm;
-	uint32_t getalarm;
-				
-	box_number = received_string[1]-48;
-				
-	memmove(received_string, received_string+3, strlen (received_string+3) + 3); // or just strlen (s)
-	received_alarm = (time_t) strtoll(received_string, &e, 10);
+		start_address = 1 + byte_size * boxnumbers;
+		//end_address =  byte_size * (boxnumbers + 1);
+		//length = end_address-start_address + 1;
+	
+	  eeprom_read_long(0x50<<1, start_address, &read_data);
+	
+		alarmtime = read_data;
+		printf("Read Alarm %d: %s ", boxnumbers, ctime(&alarmtime));
+	
+		flag = eeprom_read_byte(0x50<<1, start_address+4);	
+		printf("  | %d | ", flag);
 
-	if (*e != 0) { /* error, don't use time! */ }
+		flag = eeprom_read_byte(0x50<<1, start_address+5);
+		printf("  | %d | ", flag);
+
+		flag = eeprom_read_byte(0x50<<1, start_address+6);	
+		printf("  | %d | ", flag);
+
+		flag = eeprom_read_byte(0x50<<1, start_address+7);		
+		printf("  | %d |\n", flag);
+
+}
+
+
+void create_one_alarm(time_t alarm_time){
+	//int alarm_date, alarm_month, alarm_year, alarm_seconds;
+	int	alarm_hours, alarm_minutes, alarm_dayofweek;
+	struct tm *alarm;
 				
-	alarm = localtime(&received_alarm);
-	printf("The Alarm is : %s", ctime(&received_alarm));
+	alarm = localtime(&alarm_time);
 				
-	alarm_date = (alarm->tm_mday);
-	alarm_month = (alarm->tm_mon)+1;
-	alarm_year = (alarm->tm_year)+1900;
+	//alarm_date = (alarm->tm_mday);
+	//alarm_month = (alarm->tm_mon)+1;
+	//alarm_year = (alarm->tm_year)+1900;
 				
 	alarm_dayofweek = (alarm->tm_wday);
 	if(alarm_dayofweek == 0)
@@ -150,10 +141,7 @@ void usart_create_alarm(){
 				
 	alarm_hours = (alarm->tm_hour);
 	alarm_minutes = (alarm->tm_min);
-	alarm_seconds = (alarm->tm_sec);
-				
-	eeprom_write_long(0x50<<1, 28, received_alarm);
-	eeprom_read_long(0x50<<1, 28, &getalarm);	
+	//alarm_seconds = (alarm->tm_sec);
 				
 	createAlarm(alarm_hours ,alarm_minutes, alarm_dayofweek);
 	STM_EVAL_LEDOn(LED5);
@@ -197,6 +185,8 @@ void usart_set_time(time_t current_time){
 
 void usart_interrup_main(){
 	
+	printf( "Received String: %s\n",received_string);
+
  	flag_usart = 0;
 	token_size = 0;
 	memset(copy1,0,sizeof(copy1));
@@ -269,10 +259,23 @@ void usart_interrup_main(){
 			  bN = json_integer_value(bN_obj);
 				bS = json_integer_value(bS_obj);
 			  aT = json_integer_value(aT_obj);
-				
+				alarmtime = aT;
+				printf("Alarm %d: %s", bN, ctime(&alarmtime));
+
 				boxes.pillbox[bN].alarmTime = aT;
-				boxes.pillbox[bN].box_state = bS;
+				boxes.pillbox[bN].box_state = bN;
+				boxes.pillbox[bN].alarm_created = bN;
+				boxes.pillbox[bN].alarm_creating_order = bN;
+				boxes.pillbox[bN].alarm_ok = bN;
+				
 				json_decref(root);
+				
+				writeAlarmtoEEPROM(bN);
+				
+				if(x==1) {
+					create_one_alarm(aT);
+					which_alarm_created = 0;
+				}	
 			}		
 		break;	
 		

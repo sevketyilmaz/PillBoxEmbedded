@@ -11,7 +11,7 @@ void eeprom_write_byte( uint8_t deviceaddress, uint8_t eeaddress, uint8_t data )
      I2C_writeBytes(deviceaddress, eeaddresspage, length, data);
 }
 
-void eeprom_write_long( uint8_t deviceaddress, uint8_t eeaddresspage, uint32_t write_data) {
+void eeprom_write_long( uint8_t deviceaddress, uint8_t eeaddresspage, int write_data) {
 	 
 	uint8_t data[4];
   data[0] = (write_data & 0xFF000000) >> 24;
@@ -33,7 +33,7 @@ void eeprom_write_long( uint8_t deviceaddress, uint8_t eeaddresspage, uint32_t w
 	 I2C_readBytes(deviceaddress, eeaddress, length, buffer);
 }
 
- void eeprom_read_long( uint8_t deviceaddress, uint8_t eeaddress, uint32_t *read_data) {
+ void eeprom_read_long( uint8_t deviceaddress, uint8_t eeaddress, int *read_data) {
  
 	uint8_t data[4];  
 	I2C_readBytes(deviceaddress, eeaddress, 4, data);
