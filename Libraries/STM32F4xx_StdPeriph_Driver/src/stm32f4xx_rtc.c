@@ -760,6 +760,7 @@ void RTC_BypassShadowCmd(FunctionalState NewState)
   *          - SUCCESS: RTC Time register is configured
   *          - ERROR: RTC Time register is not configured
   */
+	
 ErrorStatus RTC_SetTime(uint32_t RTC_Format, RTC_TimeTypeDef* RTC_TimeStruct)
 {
   uint32_t tmpreg = 0;

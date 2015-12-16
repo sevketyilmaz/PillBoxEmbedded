@@ -8,8 +8,14 @@
 #include "delay.h"
 #include "pillbox.h"
 
+uint8_t rtc_alarm_irqhandler_flag = 0;
+
 char str_rtc[50];
 uint8_t alarmtimecounter = 0,alarmok = 0;
+
+/* Current seconds value */
+uint8_t sec = 0;
+
 
 void rtc_init() {
     RTC_InitTypeDef RTC_InitStructure;
@@ -116,12 +122,37 @@ void sendTime(void){
 	
 	RTC_GetTime(RTC_Format_BIN, &RTC_TimeStruct);
 	RTC_GetDate(RTC_Format_BIN, &RTC_DateStruct);
-
-	sprintf(str_rtc,"     #:%d:%d:%d:%d:%d:%d:%d:\n",RTC_TimeStruct.RTC_Hours,RTC_TimeStruct.RTC_Minutes,RTC_TimeStruct.RTC_Seconds,
-	RTC_DateStruct.RTC_Date,RTC_DateStruct.RTC_Month,RTC_DateStruct.RTC_Year, RTC_DateStruct.RTC_WeekDay);
-	USART_puts(USART1,str_rtc);
+	
+	if (RTC_TimeStruct.RTC_Seconds != sec) {
+		sec = RTC_TimeStruct.RTC_Seconds;
+		sprintf(str_rtc,"     #:%d:%d:%d:%d:%d:%d:%d:\n",RTC_TimeStruct.RTC_Hours,RTC_TimeStruct.RTC_Minutes,RTC_TimeStruct.RTC_Seconds,
+		RTC_DateStruct.RTC_Date,RTC_DateStruct.RTC_Month,RTC_DateStruct.RTC_Year, RTC_DateStruct.RTC_WeekDay);
+		USART_puts(USART1,str_rtc);
+	}	
 }
 
+time_t get_current_time_ms(){
+
+	RTC_TimeTypeDef RTC_TimeStruct;
+	RTC_DateTypeDef RTC_DateStruct;
+	
+	struct tm t;
+	time_t t_of_day;
+	
+	RTC_GetTime(RTC_Format_BIN, &RTC_TimeStruct);
+	RTC_GetDate(RTC_Format_BIN, &RTC_DateStruct);
+	
+	t.tm_year = (RTC_DateStruct.RTC_Year + 2000) - 1900;
+  t.tm_mon = RTC_DateStruct.RTC_Month - 1;           // Month, 0 - jan
+  t.tm_mday = RTC_DateStruct.RTC_Date;          // Day of the month
+  t.tm_hour = RTC_TimeStruct.RTC_Hours;     
+  t.tm_min = RTC_TimeStruct.RTC_Minutes;
+  t.tm_sec = RTC_TimeStruct.RTC_Seconds;
+  t.tm_isdst = -1;        // Is DST on? 1 = yes, 0 = no, -1 = unknown
+	t_of_day = mktime(&t);
+	
+	return t_of_day;
+}
 void RTC_Alarm_IRQHandler(void) {
 	
 	/* Clear the EXTIL line 17 */
@@ -131,13 +162,8 @@ void RTC_Alarm_IRQHandler(void) {
 		RTC_ClearITPendingBit(RTC_IT_ALRA);
 		EXTI_ClearITPendingBit(EXTI_Line17);
 		
-		STM_EVAL_LEDToggle(LED5);
-		
-		alarmok = 1;
-		alarmtimecounter = 30;
-		TIM1->CCR1 = 20;
-		which_alarm_created++;
-		create_one_alarm(boxes.pillbox[which_alarm_created].alarmTime);
+		rtc_alarm_irqhandler_flag = 1;
+
 	}	
 }
 
@@ -148,6 +174,11 @@ void RTC_WKUP_IRQHandler(void)
     RTC_ClearITPendingBit(RTC_IT_WUT);
     EXTI_ClearITPendingBit(EXTI_Line22);
 		
+		if(remaining_alarmtime >= 0)
+			remaining_alarmtime--;
+		if(remaining_alarmtime == 0)
+			rtc_alarm_irqhandler_flag = 1;
+
 		if(alarmok == 1)
 			alarmtimecounter--;
 		if(alarmtimecounter == 0 && alarmok == 1){

@@ -13,12 +13,16 @@
 #include "usart.h"
 #include "delay.h"
 #include "i2c.h"
+#include "rtc.h"
+#include "motor.h"
 
 #include "String.h"
 #include "Jansson.h"
 
 struct Boxes boxes;
 uint8_t which_alarm_created;
+
+int remaining_alarmtime;
 
 time_t alarmtime;
 
@@ -28,11 +32,29 @@ char *(buffer[40]);
 char copy1[40][40];
 int token_size=0;
 int x;
+uint32_t subsecond;
+int message,led_status,current_time,bN,bS,aT,motor_direction,motor_onoff;
 
-int message,led_status,current_time,bN,bS,aT;
-
-json_t *root, *message_obj, *led_obj, *current_time_obj, *bN_obj, *bS_obj, *aT_obj;
+json_t *root, *message_obj, *led_obj, *current_time_obj, *bN_obj, *bS_obj, *aT_obj, *motor_obj, *motor_direction_obj;
 json_error_t error;
+
+
+
+unsigned int acix=0;
+unsigned int sifirKonumux=1100;
+unsigned int pwmx=0;
+
+void box_switch_pins_init(){
+	GPIO_InitTypeDef GPIO_InitStruct;
+	  
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_4 | GPIO_Pin_5;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
+	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);		
+	GPIO_Init(GPIOC, &GPIO_InitStruct);
+}
 
 void createAlarm(uint8_t hour, uint8_t minutes, uint8_t dayOfWeek) {
 	
@@ -93,6 +115,31 @@ void writeAlarmtoEEPROM(uint8_t boxnumbers){
 		eeprom_write_byte(0x50<<1, start_address+7,	boxes.pillbox[boxnumbers].alarm_ok);		
 }
 
+void set_Alarm_Ok_Flag(uint8_t boxnumbers, uint8_t alarm_ok){
+		uint8_t byte_size = 8; // Number of byte for each boxes
+		uint8_t start_address;
+		//uint8_t end_address, length; 
+		
+		start_address = 1 + byte_size * boxnumbers;
+		//end_address =  byte_size * (boxnumbers + 1);
+		//length = end_address-start_address + 1;
+		boxes.pillbox[boxnumbers].alarm_ok = alarm_ok;	
+		eeprom_write_byte(0x50<<1, start_address+7,	boxes.pillbox[boxnumbers].alarm_ok);		
+}
+
+uint8_t read_Alarm_Ok_Flag(uint8_t boxnumbers){
+		uint8_t byte_size = 8; // Number of byte for each boxes
+		uint8_t start_address;
+		//uint8_t end_address, length; 
+		uint8_t flag;
+		start_address = 1 + byte_size * boxnumbers;
+		//end_address =  byte_size * (boxnumbers + 1);
+		//length = end_address-start_address + 1;
+		
+		flag = eeprom_read_byte(0x50<<1, start_address+7);
+		return flag;
+}
+
 void readAlarmtoEEPROM(uint8_t boxnumbers){
 		uint8_t byte_size = 8; // Number of byte for each boxes
 		uint8_t start_address;
@@ -105,7 +152,7 @@ void readAlarmtoEEPROM(uint8_t boxnumbers){
 		//length = end_address-start_address + 1;
 	
 	  eeprom_read_long(0x50<<1, start_address, &read_data);
-	
+		boxes.pillbox[boxnumbers].alarmTime = read_data;
 		alarmtime = read_data;
 		printf("Read Alarm %d: %s ", boxnumbers, ctime(&alarmtime));
 	
@@ -118,7 +165,8 @@ void readAlarmtoEEPROM(uint8_t boxnumbers){
 		flag = eeprom_read_byte(0x50<<1, start_address+6);	
 		printf("  | %d | ", flag);
 
-		flag = eeprom_read_byte(0x50<<1, start_address+7);		
+		flag = eeprom_read_byte(0x50<<1, start_address+7);	
+		boxes.pillbox[boxnumbers].alarm_ok = flag;
 		printf("  | %d |\n", flag);
 
 }
@@ -128,7 +176,7 @@ void create_one_alarm(time_t alarm_time){
 	//int alarm_date, alarm_month, alarm_year, alarm_seconds;
 	int	alarm_hours, alarm_minutes, alarm_dayofweek;
 	struct tm *alarm;
-				
+			
 	alarm = localtime(&alarm_time);
 				
 	//alarm_date = (alarm->tm_mday);
@@ -144,12 +192,25 @@ void create_one_alarm(time_t alarm_time){
 	//alarm_seconds = (alarm->tm_sec);
 				
 	createAlarm(alarm_hours ,alarm_minutes, alarm_dayofweek);
+	
+	//RTC_AlarmSubSecondConfig(RTC_Alarm_a, subsecond, RTC_AlarmSubSecondMask_None);
+	//subsecond = RTC_GetAlarmSubSecond(RTC_Alarm_A);
+	//printf("Sub Second: %d\n", subsecond);
+
+	STM_EVAL_LEDOn(LED5);
+}
+
+void create_one_alarm_in_ms(time_t alarm_time){
+	
+	time_t currentime;
+	currentime = get_current_time_ms();
+	remaining_alarmtime = difftime(alarm_time, currentime);			//alarmtime - currenttime
 	STM_EVAL_LEDOn(LED5);
 }
 
 void usart_set_time(time_t current_time){
 	
-	int date, month, year, dayofweek, hours, minutes, seconds;				
+	int date, month, year, dayofweek, hours, minutes, seconds, now;				
 	struct tm *time_date;
 			
 	RTC_TimeTypeDef RTC_TimeStructure;
@@ -166,21 +227,48 @@ void usart_set_time(time_t current_time){
 	if(dayofweek == 0)
 		dayofweek = 7;
 				
-		hours = (time_date->tm_hour);
-		minutes = (time_date->tm_min);
-		seconds = (time_date->tm_sec);
+	hours = (time_date->tm_hour);
+	minutes = (time_date->tm_min);
+	seconds = (time_date->tm_sec);
 				
-		RTC_DateStructure.RTC_Year = year-2000;
-		RTC_DateStructure.RTC_Month = month;
-		RTC_DateStructure.RTC_Date = date;
-		RTC_DateStructure.RTC_WeekDay = dayofweek;
-		RTC_SetDate(RTC_Format_BIN, &RTC_DateStructure);	
+	RTC_DateStructure.RTC_Year = year-2000;
+	RTC_DateStructure.RTC_Month = month;
+	RTC_DateStructure.RTC_Date = date;
+	RTC_DateStructure.RTC_WeekDay = dayofweek;
+	RTC_SetDate(RTC_Format_BIN, &RTC_DateStructure);	
 				
-		RTC_TimeStructure.RTC_H12     = RTC_HourFormat_24;
-		RTC_TimeStructure.RTC_Hours   = hours;
-		RTC_TimeStructure.RTC_Minutes = minutes;
-		RTC_TimeStructure.RTC_Seconds = seconds; 
-		RTC_SetTime(RTC_Format_BIN, &RTC_TimeStructure);  
+	RTC_TimeStructure.RTC_H12     = RTC_HourFormat_24;
+	RTC_TimeStructure.RTC_Hours   = hours;
+	RTC_TimeStructure.RTC_Minutes = minutes;
+	RTC_TimeStructure.RTC_Seconds = seconds; 
+	RTC_SetTime(RTC_Format_BIN, &RTC_TimeStructure);  
+	
+	now = get_current_time_ms();
+	printf("My calculation of current time is : %d", now);
+
+}
+void open_box(){
+				stopMotor();
+
+	sifirKonumux = 0;
+			acix = 26;
+			pwmx=(acix*20)+sifirKonumux; 
+			TIM_SetCompare1(TIM3,pwmx);
+			delay_ms(150);
+		
+			sifirKonumux = 0;
+			acix = 26;
+			pwmx =(acix*20)+sifirKonumux; 
+			TIM_SetCompare1(TIM3,pwmx); 
+			delay_ms(150); 
+		
+			sifirKonumux = 1200;
+			acix = 0;
+			pwmx =(acix*20)+sifirKonumux; 
+			TIM_SetCompare1(TIM3,pwmx); 
+			delay_ms(350);
+		
+			TIM_SetCompare1(TIM3,0); 
 }
 
 void usart_interrup_main(){
@@ -194,7 +282,7 @@ void usart_interrup_main(){
 	token = strtok(received_string, "}"); 
   while( token != NULL ) {
 		token[strlen(token)] = 0x7D;
-		//printf( "%d: %s\n",token_size, token);
+		printf( "%d: %s\n",token_size, token);
 		buffer[token_size] = token;
     token = strtok(NULL, "}");
 		token_size++;
@@ -213,7 +301,7 @@ void usart_interrup_main(){
 			buffer[x]++;
 			buffer[x][strlen(buffer[x])-1] = 0;
 		}	
-		//printf( "buffer%d: %s\n",x,buffer[x]);
+		printf( "buffer%d: %s\n",x,buffer[x]);
 	}	
 	
 	root = json_loads(buffer[0], 0, &error);
@@ -225,6 +313,46 @@ void usart_interrup_main(){
 	
 	switch(message){
 	
+		case 6:
+			
+			stopMotor();
+			
+			sifirKonumux = 0;
+			acix = 26;
+			pwmx=(acix*20)+sifirKonumux; 
+			TIM_SetCompare1(TIM3,pwmx);
+			delay_ms(150);
+		
+			sifirKonumux = 0;
+			acix = 26;
+			pwmx =(acix*20)+sifirKonumux; 
+			TIM_SetCompare1(TIM3,pwmx); 
+			delay_ms(150); 
+		
+			sifirKonumux = 1200;
+			acix = 0;
+			pwmx =(acix*20)+sifirKonumux; 
+			TIM_SetCompare1(TIM3,pwmx); 
+			delay_ms(350);
+		
+			TIM_SetCompare1(TIM3,0); 
+			json_decref(root);
+		break;
+		
+		case 5:
+			motor_direction_obj = json_object_get(root,"motor_direction");
+			motor_direction = json_integer_value(motor_direction_obj);
+			Direction = motor_direction;
+			json_decref(root);
+		break;
+		
+		case 4:
+			motor_obj = json_object_get(root,"motor_onoff");
+			motor_onoff = json_integer_value(motor_obj);
+			Motor_Status = motor_onoff;
+			json_decref(root);
+		break;
+		
 		case 3:
 			led_obj = json_object_get(root,"led_status");
 			led_status = json_integer_value(led_obj);
@@ -238,7 +366,7 @@ void usart_interrup_main(){
 		case 2:
 			current_time_obj = json_object_get(root,"current_time");
 			current_time = json_integer_value(current_time_obj);
-		  usart_set_time(current_time);
+			usart_set_time(current_time);
 			json_decref(root);
 		break;			
 		
@@ -266,14 +394,15 @@ void usart_interrup_main(){
 				boxes.pillbox[bN].box_state = bN;
 				boxes.pillbox[bN].alarm_created = bN;
 				boxes.pillbox[bN].alarm_creating_order = bN;
-				boxes.pillbox[bN].alarm_ok = bN;
+				boxes.pillbox[bN].alarm_ok = 0;
 				
 				json_decref(root);
 				
 				writeAlarmtoEEPROM(bN);
 				
 				if(x==1) {
-					create_one_alarm(aT);
+					//create_one_alarm(aT);
+					create_one_alarm_in_ms(aT);
 					which_alarm_created = 0;
 				}	
 			}		

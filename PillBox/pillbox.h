@@ -37,6 +37,9 @@ struct Boxes{
 
 extern struct Boxes boxes;
 extern uint8_t which_alarm_created;
+extern int remaining_alarmtime;
+
+void box_switch_pins_init(void);
 
 void createAlarm(uint8_t hour, uint8_t minutes, uint8_t dayOfWeek);
 uint8_t getVariable(char variable[50]);
@@ -46,6 +49,12 @@ void readAlarmtoEEPROM(uint8_t boxnumbers);
 void create_one_alarm(time_t alarm_time);
 void usart_set_time(time_t current_time);
 void usart_interrup_main(void);
+
+void set_Alarm_Ok_Flag(uint8_t boxnumbers, uint8_t alarm_ok);
+uint8_t read_Alarm_Ok_Flag(uint8_t boxnumbers);
+
+void create_one_alarm_in_ms(time_t alarm_time);
+void open_box(void);
 
 #endif /* __PILLBOX_H */
 

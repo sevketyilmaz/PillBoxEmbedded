@@ -26,9 +26,11 @@ PE7   |   0   |   0   |   1   |   1   |
 ---------------------------------------
 PE8   |   1   |   1   |   0   |   0   |
 ---------------------------------------
-PE9   |   1   |   0   |   0   |   1   |
+PE9   |   0   |   1   |   1   |   0   |
 ---------------------------------------
-PE10  |   0   |   1   |   1   |   0   |
+PE10  |   1   |   0   |   0   |   1   |
+---------------------------------------
+      |   5   |   6   |   10  |   9   |
 ---------------------------------------
 */
 
@@ -36,9 +38,34 @@ PE10  |   0   |   1   |   1   |   0   |
 #include "stm32f4_discovery.h"
 
 #include "motor.h"
+#include "delay.h"
 
-int Direction = 1, Steps = 0;
+int Direction = 1, Steps = 0, Motor_Status = 0;
 BitAction LOW = Bit_RESET, HIGH = Bit_SET;
+int step_count;
+int m=0;
+
+void go_to_box(uint8_t current_boxnumber, uint8_t next_boxnumber){
+			
+	step_count = 4200 * (next_boxnumber-current_boxnumber);
+	
+	for(m=0;m<step_count;m++) {		
+		stepper();
+		delay_us(3300);
+	}
+}
+
+void motor_switch_pin_init(){
+	GPIO_InitTypeDef GPIO_InitStruct;
+	  
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
+	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_100MHz;
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);		
+	GPIO_Init(GPIOA, &GPIO_InitStruct);
+}
 
 void motor_pin_init(void) {
 	
@@ -70,24 +97,24 @@ void stepper(void){
 		switch(Steps){
 			case 0:
 			GPIO_WriteBit(GPIOE,GPIO_Pin_7, HIGH); 
-			GPIO_WriteBit(GPIOE,GPIO_Pin_8, LOW);
+			GPIO_WriteBit(GPIOE,GPIO_Pin_8, HIGH);
 			GPIO_WriteBit(GPIOE,GPIO_Pin_9, LOW);
 			GPIO_WriteBit(GPIOE,GPIO_Pin_10, LOW);
 			break; 
 			case 1:
 			GPIO_WriteBit(GPIOE,GPIO_Pin_7, LOW); 
-			GPIO_WriteBit(GPIOE,GPIO_Pin_8, LOW);
+			GPIO_WriteBit(GPIOE,GPIO_Pin_8, HIGH);
 			GPIO_WriteBit(GPIOE,GPIO_Pin_9, HIGH);
 			GPIO_WriteBit(GPIOE,GPIO_Pin_10, LOW);
 			break; 
 			case 2:
 			GPIO_WriteBit(GPIOE,GPIO_Pin_7, LOW); 
-			GPIO_WriteBit(GPIOE,GPIO_Pin_8, HIGH);
-			GPIO_WriteBit(GPIOE,GPIO_Pin_9, LOW);
-			GPIO_WriteBit(GPIOE,GPIO_Pin_10, LOW);
+			GPIO_WriteBit(GPIOE,GPIO_Pin_8, LOW);
+			GPIO_WriteBit(GPIOE,GPIO_Pin_9, HIGH);
+			GPIO_WriteBit(GPIOE,GPIO_Pin_10, HIGH);
 			break; 
 			case 3:
-			GPIO_WriteBit(GPIOE,GPIO_Pin_7, LOW); 
+			GPIO_WriteBit(GPIOE,GPIO_Pin_7, HIGH); 
 			GPIO_WriteBit(GPIOE,GPIO_Pin_8, LOW);
 			GPIO_WriteBit(GPIOE,GPIO_Pin_9, LOW);
 			GPIO_WriteBit(GPIOE,GPIO_Pin_10, HIGH);

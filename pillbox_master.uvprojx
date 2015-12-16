@@ -369,7 +369,7 @@
               <MiscControls></MiscControls>
               <Define>HSE_VALUE=8000000, STM32F4XX, USE_STDPERIPH_DRIVER, USE_STM32F4_DISCOVERY</Define>
               <Undefine></Undefine>
-              <IncludePath>.\src;.\inc;.\Libraries\CMSIS\Include;.\Libraries\CMSIS\Device\ST\STM32F4xx\Include;.\Libraries\STM32F4xx_StdPeriph_Driver\src;.\Libraries\STM32F4xx_StdPeriph_Driver\inc;.\Utilities\STM32F4-Discovery;.\Delay;.\Usart;.\I2C;.\Keypad;.\LCD;.\PillBox;.\Motor;.\RTC;.\Vbat;.\Sound;.\EEPROM</IncludePath>
+              <IncludePath>.\src;.\inc;.\Libraries\CMSIS\Include;.\Libraries\CMSIS\Device\ST\STM32F4xx\Include;.\Libraries\STM32F4xx_StdPeriph_Driver\src;.\Libraries\STM32F4xx_StdPeriph_Driver\inc;.\Utilities\STM32F4-Discovery;.\Delay;.\Usart;.\I2C;.\Keypad;.\LCD;.\PillBox;.\Motor;.\RTC;.\Vbat;.\Sound;.\EEPROM;.\Servo</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -786,6 +786,21 @@
               <FileName>eeprom.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\EEPROM\eeprom.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Servo</GroupName>
+          <Files>
+            <File>
+              <FileName>servo.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Servo\servo.c</FilePath>
+            </File>
+            <File>
+              <FileName>servo.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Servo\servo.h</FilePath>
             </File>
           </Files>
         </Group>
