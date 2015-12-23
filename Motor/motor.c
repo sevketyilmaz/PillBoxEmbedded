@@ -47,12 +47,31 @@ int m=0;
 
 void go_to_box(uint8_t current_boxnumber, uint8_t next_boxnumber){
 			
-	step_count = 4200 * (next_boxnumber-current_boxnumber);
+	int a = 5750;
+	int b = 12450; //hesap 15400
+	int n = 0;
+	int step_count = 0;
+
+	n = next_boxnumber - current_boxnumber;
+	
+	if(n>0) {
+		Direction = 0;
+	}	
+	else {
+		Direction = 1;
+		n = -n;
+		current_boxnumber = next_boxnumber;
+		next_boxnumber = current_boxnumber +n;
+	}
+	
+	step_count = a*n + (b-a)*((next_boxnumber/3) - (current_boxnumber/3));
 	
 	for(m=0;m<step_count;m++) {		
 		stepper();
 		delay_us(3300);
 	}
+	
+	stopMotor();
 }
 
 void motor_switch_pin_init(){

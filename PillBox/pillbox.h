@@ -22,8 +22,8 @@ typedef struct{
 
 typedef struct{
 	int alarmTime;
+	uint8_t box_number; 
 	uint8_t box_state; 
-	uint8_t alarm_creating_order; // If it equal 1 box close, not box open
 	uint8_t alarm_created; 				// If it equal 1 box close, not box open
 	uint8_t alarm_ok;
 	
@@ -38,6 +38,7 @@ struct Boxes{
 extern struct Boxes boxes;
 extern uint8_t which_alarm_created;
 extern int remaining_alarmtime;
+extern int next_box, current_box;
 
 void box_switch_pins_init(void);
 

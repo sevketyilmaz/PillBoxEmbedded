@@ -38,6 +38,7 @@ int message,led_status,current_time,bN,bS,aT,motor_direction,motor_onoff;
 json_t *root, *message_obj, *led_obj, *current_time_obj, *bN_obj, *bS_obj, *aT_obj, *motor_obj, *motor_direction_obj;
 json_error_t error;
 
+ int next_box=0, current_box=0;
 
 
 unsigned int acix=0;
@@ -108,10 +109,10 @@ void writeAlarmtoEEPROM(uint8_t boxnumbers){
 		//end_address =  byte_size * (boxnumbers + 1);
 		//length = end_address-start_address + 1;
 	
-	  eeprom_write_long(0x50<<1, start_address, boxes.pillbox[boxnumbers].alarmTime);
-		eeprom_write_byte(0x50<<1, start_address+4, boxes.pillbox[boxnumbers].box_state);		
-		eeprom_write_byte(0x50<<1, start_address+5,	boxes.pillbox[boxnumbers].alarm_created);		
-		eeprom_write_byte(0x50<<1, start_address+6,	boxes.pillbox[boxnumbers].alarm_creating_order);		
+	  eeprom_write_long(0x50<<1, start_address,   boxes.pillbox[boxnumbers].alarmTime);
+		eeprom_write_byte(0x50<<1, start_address+4, boxes.pillbox[boxnumbers].box_number);		
+		eeprom_write_byte(0x50<<1, start_address+5, boxes.pillbox[boxnumbers].box_state);		
+		eeprom_write_byte(0x50<<1, start_address+6,	boxes.pillbox[boxnumbers].alarm_created);		
 		eeprom_write_byte(0x50<<1, start_address+7,	boxes.pillbox[boxnumbers].alarm_ok);		
 }
 
@@ -247,10 +248,11 @@ void usart_set_time(time_t current_time){
 	printf("My calculation of current time is : %d", now);
 
 }
-void open_box(){
-				stopMotor();
 
-	sifirKonumux = 0;
+void open_box(){
+			stopMotor();
+
+			sifirKonumux = 0;
 			acix = 26;
 			pwmx=(acix*20)+sifirKonumux; 
 			TIM_SetCompare1(TIM3,pwmx);
@@ -371,10 +373,14 @@ void usart_interrup_main(){
 		break;			
 		
 		case 1:
+			
+			clear_eeprom();
+			
 			current_time_obj = json_object_get(root,"cT");
 			current_time = json_integer_value(current_time_obj);
 		  usart_set_time(current_time);
 			json_decref(root);
+		
 			for(x=1; x<token_size-1; x++){
 				root = json_loads(buffer[x], 0, &error);
 				if(error.line != 0xFFFFFFFF) {
@@ -388,24 +394,32 @@ void usart_interrup_main(){
 				bS = json_integer_value(bS_obj);
 			  aT = json_integer_value(aT_obj);
 				alarmtime = aT;
-				printf("Alarm %d: %s", bN, ctime(&alarmtime));
-
-				boxes.pillbox[bN].alarmTime = aT;
-				boxes.pillbox[bN].box_state = bN;
-				boxes.pillbox[bN].alarm_created = bN;
-				boxes.pillbox[bN].alarm_creating_order = bN;
-				boxes.pillbox[bN].alarm_ok = 0;
+				
+				printf("Alarm %d: %s", x-1, ctime(&alarmtime));
+				
+				boxes.pillbox[x-1].box_number = bN;
+				boxes.pillbox[x-1].alarmTime = aT;
+				
+				boxes.pillbox[x-1].box_state = bS;
+				boxes.pillbox[x-1].alarm_created = 0;
+				boxes.pillbox[x-1].alarm_ok = 0;
 				
 				json_decref(root);
 				
-				writeAlarmtoEEPROM(bN);
+				writeAlarmtoEEPROM(x-1);
 				
 				if(x==1) {
+					
+					boxes.pillbox[x-1].alarm_created = 1;
+					next_box = bN;
+					
 					//create_one_alarm(aT);
 					create_one_alarm_in_ms(aT);
 					which_alarm_created = 0;
 				}	
-			}		
+			}
+			
+			go_to_box(current_box,next_box);
 		break;	
 		
 	}

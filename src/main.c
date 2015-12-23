@@ -114,7 +114,7 @@ time_t t_of_day, alrmtime,currentime;
 int k;
 
 unsigned int aci=0;
-unsigned int sifirKonumu=1100;
+unsigned int sifirKonumu=1000;
 unsigned int pwm=0;
 	
 void button_init(void);
@@ -198,7 +198,7 @@ int main(void) {
 	TIM_SetCompare1(TIM3,pwm); //pwm'i guncelle
 	delay_ms(20); //acinin her degismesinde 10ms bekler
 	TIM_SetCompare1(TIM3,0); //pwm'i guncelle
-	aci=15;
+	aci=10;
   pwm=(aci*20)+sifirKonumu;
   TIM_SetCompare1(TIM3,pwm);
   delay_ms(2000);
@@ -206,21 +206,52 @@ int main(void) {
 	pwm=(aci*20)+sifirKonumu; //pwm 500-550 iken 0 derece konumunda bekler
 	TIM_SetCompare1(TIM3,pwm); //pwm'i guncelle
 	delay_ms(20); //acinin her degismesinde 10ms bekler
-	TIM_SetCompare1(TIM3,0); //pwm'i guncelle
+	TIM_SetCompare1(TIM3,0); //pwm'i guncelle	
 	
-  STM_EVAL_LEDOn(LED3);
-	
-	
-	while(GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_5)){
+	while(GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_3)){
 		stepper();
 		delay_us(3300);
 	}
 
-	//go_to_box(0,1);
+  STM_EVAL_LEDOn(LED3);
+
+	/*Box Gidis Testi*/
+	/*
+	delay_ms(2000);
 	
+	open_box();
+
+	go_to_box(0,1);
+	open_box();
+	
+	go_to_box(1,2);
+	open_box();
+	
+	go_to_box(2,3);
+	open_box();
+	
+	go_to_box(3,4);
+	open_box();
+	
+	go_to_box(4,5);
+	open_box();
+	
+	go_to_box(5,6);
+	open_box();
+	
+	go_to_box(6,7);
+	open_box();
+	
+	go_to_box(7,8);
+	open_box();
+	
+	delay_ms(2000);
+	*/
+
 	while (1) {
 		
 		/*Motor Switches*/
+		/*
 		if(GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_3) == 0){
 			STM_EVAL_LEDOn(LED4);
 			Direction = 1;//right
@@ -236,14 +267,13 @@ int main(void) {
 		else{
 			STM_EVAL_LEDOff(LED5);
 		}
-		
 		if(Motor_Status == 1) {
 			stepper();
 			delay_us(3300);
-			
 			adim++;
 		}	
-
+		*/
+		
 		/*
 		//SWITCHES
 		if(GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_1) == 1){			
@@ -291,18 +321,37 @@ int main(void) {
 			rtc_alarm_irqhandler_flag = 0;
 			
 			STM_EVAL_LEDOff(LED5);
-		
+			open_box();
+
 			boxes.pillbox[which_alarm_created].alarm_ok = 1;
 			set_Alarm_Ok_Flag(which_alarm_created,1);
-		
+			
+			current_box = boxes.pillbox[which_alarm_created].box_number;
+			
 			alarmok = 1;
 			alarmtimecounter = 30;
 			TIM1->CCR1 = 20;
 			which_alarm_created++;
+			
+			next_box = boxes.pillbox[which_alarm_created].box_number;
+
+			
 			if(which_alarm_created<5){
 				//create_one_alarm(boxes.pillbox[which_alarm_created].alarmTime);
 				create_one_alarm_in_ms(boxes.pillbox[which_alarm_created].alarmTime);
+				go_to_box(current_box,next_box);
 			}	
+		}
+		
+		if(which_alarm_created == 5) {
+			
+			current_box=0;
+			next_box=0;
+			Direction = 1;
+			while(GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_3)){
+				stepper();
+				delay_us(3300);
+			}
 		}
 		
 	}

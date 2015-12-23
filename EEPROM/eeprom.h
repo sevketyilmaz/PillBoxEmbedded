@@ -14,4 +14,6 @@ void eeprom_read_buffer( uint8_t deviceaddress, uint8_t eeaddress, uint8_t *buff
 void eeprom_write_long( uint8_t deviceaddress, uint8_t eeaddresspage, int write_data);
 void eeprom_read_long( uint8_t deviceaddress, uint8_t eeaddress, int *read_data);
 
+void clear_eeprom(void);
+
 #endif /* __EEPROM_H */

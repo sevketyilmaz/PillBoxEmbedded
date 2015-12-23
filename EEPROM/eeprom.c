@@ -1,6 +1,13 @@
 #include "eeprom.h"
 #include "i2c.h"
 
+void clear_eeprom() {
+	int e;
+	for(e=0; e<256; e++) {
+		eeprom_write_byte(0x50<<1, e, 0);
+	}
+}
+
 void eeprom_write_byte( uint8_t deviceaddress, uint8_t eeaddress, uint8_t data ) {
     
 	I2C_writeByte(deviceaddress, eeaddress, data);
