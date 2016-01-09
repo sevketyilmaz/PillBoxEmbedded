@@ -57,6 +57,71 @@ void box_switch_pins_init(){
 	GPIO_Init(GPIOC, &GPIO_InitStruct);
 }
 
+void box_pins_init(){
+	GPIO_InitTypeDef GPIO_InitStruct;
+	  
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
+	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);		
+	GPIO_Init(GPIOB, &GPIO_InitStruct);
+	
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
+	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);		
+	GPIO_Init(GPIOD, &GPIO_InitStruct);
+}
+
+void read_boxes_state(){
+		int32_t box_current_state=0;
+		char str_pillbox[50];
+		/*Box 1*/
+		if(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13) == 1){
+			box_current_state = (box_current_state | 0x0001);
+		}
+		else{
+			box_current_state = (box_current_state & 0xFFFE);
+		}
+		/*Box 2*/
+		if(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_14) == 1){
+			box_current_state = (box_current_state | 0x0002);
+		}
+		else{
+			box_current_state = (box_current_state & 0xFFFD);
+		}
+		/*Box 3*/
+		if(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_15) == 1){
+			box_current_state = (box_current_state | 0x0004);
+		}
+		else{
+			box_current_state = (box_current_state & 0xFFFB);
+		}
+		/*Box 4*/
+		if(GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_8) == 1){
+			box_current_state = (box_current_state | 0x0008);
+		}
+		else{
+			box_current_state = (box_current_state & 0xFFF7);
+		}
+		/*Box 5*/
+		if(GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_9) == 1){
+			box_current_state = (box_current_state) | (0x0010);
+		}
+		else{
+			box_current_state = (box_current_state & 0xFFEF);
+		}
+		
+		sprintf(str_pillbox, "       #:%d\n", box_current_state);
+		USART_puts(USART1, str_pillbox);
+		
+		STM_EVAL_LEDToggle(LED6);
+}
+
 void createAlarm(uint8_t hour, uint8_t minutes, uint8_t dayOfWeek) {
 	
 				RTC_AlarmTypeDef RTC_AlarmStructure;
@@ -125,7 +190,7 @@ void set_Alarm_Ok_Flag(uint8_t boxnumbers, uint8_t alarm_ok){
 		//end_address =  byte_size * (boxnumbers + 1);
 		//length = end_address-start_address + 1;
 		boxes.pillbox[boxnumbers].alarm_ok = alarm_ok;	
-		eeprom_write_byte(0x50<<1, start_address+7,	boxes.pillbox[boxnumbers].alarm_ok);		
+		eeprom_write_byte(0x50<<1, start_address+7,	alarm_ok);		
 }
 
 uint8_t read_Alarm_Ok_Flag(uint8_t boxnumbers){
@@ -142,15 +207,14 @@ uint8_t read_Alarm_Ok_Flag(uint8_t boxnumbers){
 }
 
 void readAlarmtoEEPROM(uint8_t boxnumbers){
-		uint8_t byte_size = 8; // Number of byte for each boxes
+		
+		int read_data;
+
+		uint8_t byte_size = 8;
 		uint8_t start_address;
-		//uint8_t end_address, length; 
-	  int read_data;
-		uint8_t flag;
+  	uint8_t flag;
 	
 		start_address = 1 + byte_size * boxnumbers;
-		//end_address =  byte_size * (boxnumbers + 1);
-		//length = end_address-start_address + 1;
 	
 	  eeprom_read_long(0x50<<1, start_address, &read_data);
 		boxes.pillbox[boxnumbers].alarmTime = read_data;
@@ -159,19 +223,20 @@ void readAlarmtoEEPROM(uint8_t boxnumbers){
 	
 		flag = eeprom_read_byte(0x50<<1, start_address+4);	
 		printf("  | %d | ", flag);
+		boxes.pillbox[boxnumbers].box_number  = flag;
 
 		flag = eeprom_read_byte(0x50<<1, start_address+5);
 		printf("  | %d | ", flag);
+		boxes.pillbox[boxnumbers].box_state  = flag;
 
 		flag = eeprom_read_byte(0x50<<1, start_address+6);	
 		printf("  | %d | ", flag);
+		boxes.pillbox[boxnumbers].alarm_created = flag;
 
 		flag = eeprom_read_byte(0x50<<1, start_address+7);	
-		boxes.pillbox[boxnumbers].alarm_ok = flag;
 		printf("  | %d |\n", flag);
-
+		boxes.pillbox[boxnumbers].alarm_ok = flag;
 }
-
 
 void create_one_alarm(time_t alarm_time){
 	//int alarm_date, alarm_month, alarm_year, alarm_seconds;

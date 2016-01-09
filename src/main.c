@@ -1,5 +1,5 @@
-/*
-Motor Switch
+/*Motor Switch
+
 SW1 -> PD12
 SW2 -> PD13
 */
@@ -9,44 +9,43 @@ PA0 -> Wake-Up Button
 NRST
 */
 
-/*
-Switches -> PA3 --- PA7 5
-						PC4-PC5 2
-						PB0-PB1 2
-						PE7 ----  PE15 9
-						PB10 ---- PB15 6
-						PD8 ---- PD11 4
+/*Switches 
+PA3 --- PA7 5
+PC4-PC5 2
+PB0-PB1 2
+PE7 ----  PE15 9
+PB10 ---- PB15 6
+PD8 ---- PD11 4
 */
 
-/*
-Sound(Buzzer) -> PA8
+/*Sound(Buzzer)
+PA8
 */
 
-/**
-Servo -> PC6 (PC9*****)
+/*Servo
+PC6 (PC9*****)
 */
 
-/*
+/*LED
 LED1,2,3,4 -> PC8,PC7,PC6,PD15
 */
 
-/*
-LIPO ADC -> PE6
+/*LIPO ADC 
+PE6
 */
 
-/*
+/*I2C
 SCL -> PB8
 SDA -> PB9
 */
 
-/*
+/*Usart
 PB6 -> TX
 PB7 -> RX
 PB5 -> RESET
 */
 
-/*
-MOTOR
+/*MOTOR
 PE7 -> PA9 -> ULN2003
 PE8 -> PA10
 PE9 -> PA11
@@ -77,6 +76,8 @@ PE9   |   1   |   0   |   0   |   1   |
 PE10  |   0   |   1   |   1   |   0   |
 ---------------------------------------
 */
+
+
 
 #include "stm32f4xx.h"
 #include "stm32f4_discovery.h"
@@ -139,6 +140,7 @@ int main(void) {
 	ServoPin_PWM_Output_Config();
 	motor_switch_pin_init();
 	box_switch_pins_init();
+  box_pins_init();
 	
   //How to write and read data from EEPROM
 	I2C_writeBytes(0x50<<1, 0, 1, &write_byte);		
@@ -159,37 +161,11 @@ int main(void) {
   printf("seconds since the Epoch: %ld\n", (long) t_of_day);
 	*/
 	
+	
 	printf("Initilazation finish....\n");
 	
 	printf("All Alarm Disable....\n");
 	RTC_AlarmCmd(RTC_Alarm_A, DISABLE);
-	
-	for(k=0;k<5;k++){
-		readAlarmtoEEPROM(k);
-	}
-	
-	for(k=0; k<5; k++){
-		
-		status = boxes.pillbox[k].alarm_ok;
-		//double difftime(time_t /*time1*/, time_t /*time0*/);//time1 - time0
-		alrmtime = boxes.pillbox[k].alarmTime;
-		currentime = get_current_time_ms();
-		remaining_alarmtime = difftime(alrmtime, currentime);			//alarmtime - currenttime
-		printf("Remaining alarm time%d: %d\n",k, remaining_alarmtime);
-
-		if(status == 0 & remaining_alarmtime>0){
-			which_alarm_created = k; 
-			//create_one_alarm(boxes.pillbox[k].alarmTime);
-			create_one_alarm_in_ms(boxes.pillbox[k].alarmTime);
-
-			printf("New Alarm Crate%d: %d\n",k, boxes.pillbox[k].alarmTime);
-			break;
-		}
-		else{
-		
-			set_Alarm_Ok_Flag(k, 1);
-		}
-	}
 	
 	TIM1->CCR1 = 0;
 	
@@ -212,7 +188,46 @@ int main(void) {
 		stepper();
 		delay_us(3300);
 	}
+	
+	for(k=0;k<5;k++){
+		readAlarmtoEEPROM(k);
+	}
+	
+	for(k=0; k<5; k++){
+		//YAnlislik var!!!!!!!!!!!!!!!!!!!!!!!!!!!***************************
+		status = boxes.pillbox[k].alarm_ok;//
+		//double difftime(time_t time1, time_t time0);//time1 - time0
+		alrmtime = boxes.pillbox[k].alarmTime;
+		currentime = get_current_time_ms();
+		remaining_alarmtime = difftime(alrmtime, currentime);			//alarmtime - currenttime
+		printf("Remaining alarm time%d: %d\n",k, remaining_alarmtime);
+	  printf("%s \n", ctime(&currentime));
 
+
+		if(status == 0 & remaining_alarmtime>0){
+			which_alarm_created = k; 
+			//create_one_alarm(boxes.pillbox[k].alarmTime);
+			create_one_alarm_in_ms(boxes.pillbox[k].alarmTime);
+
+			next_box = boxes.pillbox[k].box_number;
+			go_to_box(current_box,next_box);
+			break;
+		}
+		else{
+			
+			if(status == 0){
+				set_Alarm_Ok_Flag(k, 1);
+			
+				if(k>0)
+					current_box = next_box;
+			
+				next_box = boxes.pillbox[k].box_number;
+				go_to_box(current_box,next_box);
+				open_box();
+			}	
+		}
+	}
+	
   STM_EVAL_LEDOn(LED3);
 
 	/*Box Gidis Testi*/
@@ -250,6 +265,10 @@ int main(void) {
 
 	while (1) {
 		
+		if(read_boxes == 1){
+			read_boxes_state();
+			read_boxes = 0;
+		}
 		/*Motor Switches*/
 		/*
 		if(GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_3) == 0){
@@ -275,7 +294,7 @@ int main(void) {
 		*/
 		
 		/*
-		//SWITCHES
+		//SWITCHES//
 		if(GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_1) == 1){			
 			STM_EVAL_LEDOn(LED3);
 		}
@@ -303,6 +322,7 @@ int main(void) {
 		}
 		*/
 		
+		
 		/*User Button*/
 		if(GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_0))	{
 			sendTime();
@@ -329,8 +349,11 @@ int main(void) {
 			current_box = boxes.pillbox[which_alarm_created].box_number;
 			
 			alarmok = 1;
-			alarmtimecounter = 30;
+			alarmtimecounter = 60;
 			TIM1->CCR1 = 20;
+			
+			set_Alarm_Ok_Flag(which_alarm_created, 1);
+			
 			which_alarm_created++;
 			
 			next_box = boxes.pillbox[which_alarm_created].box_number;

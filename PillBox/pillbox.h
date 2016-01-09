@@ -41,6 +41,8 @@ extern int remaining_alarmtime;
 extern int next_box, current_box;
 
 void box_switch_pins_init(void);
+void box_pins_init(void);
+void read_boxes_state(void);
 
 void createAlarm(uint8_t hour, uint8_t minutes, uint8_t dayOfWeek);
 uint8_t getVariable(char variable[50]);

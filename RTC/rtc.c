@@ -11,7 +11,7 @@
 uint8_t rtc_alarm_irqhandler_flag = 0;
 
 char str_rtc[50];
-uint8_t alarmtimecounter = 0,alarmok = 0;
+uint8_t alarmtimecounter = 0, alarmok = 0, read_boxes=0;
 
 /* Current seconds value */
 uint8_t sec = 0;
@@ -163,7 +163,6 @@ void RTC_Alarm_IRQHandler(void) {
 		EXTI_ClearITPendingBit(EXTI_Line17);
 		
 		rtc_alarm_irqhandler_flag = 1;
-
 	}	
 }
 
@@ -181,9 +180,13 @@ void RTC_WKUP_IRQHandler(void)
 
 		if(alarmok == 1)
 			alarmtimecounter--;
-		if(alarmtimecounter == 0 && alarmok == 1){
+		if(alarmtimecounter == 30 && alarmok == 1){
 
 				TIM1->CCR1 = 0;
+		}
+		if(alarmtimecounter == 0 && alarmok == 1){
+
+				read_boxes = 1;
 				alarmok = 0;
 		}
 		if(alarmtimecounter == 0)

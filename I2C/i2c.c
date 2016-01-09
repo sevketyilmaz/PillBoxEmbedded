@@ -149,7 +149,7 @@ void I2C_writeByte(uint8_t slave_address, uint8_t writeAddr, uint8_t data){
 	I2C_write(I2C1, writeAddr);
   I2C_write(I2C1, data);
   I2C_stop(I2C1);
-	delay_ms(5);
+	delay_ms(7);
 }
 
 void I2C_readBytes(uint8_t slave_address, uint8_t readAddr, uint8_t length, uint8_t *data) {
@@ -177,7 +177,7 @@ void I2C_writeBytes(uint8_t slave_address, uint8_t writeAddr, uint8_t length, ui
 		I2C_write(I2C1, data[i]);
   }
   I2C_stop(I2C1);
-	delay_ms(5);
+	delay_ms(7);
 }
 
 void I2C_readBit(uint8_t slave_address, uint8_t regAddr, uint8_t bitNum, uint8_t *data) {

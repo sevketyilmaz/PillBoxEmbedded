@@ -4,7 +4,7 @@
 #include <time.h>
 
 extern uint8_t rtc_alarm_irqhandler_flag;
-extern uint8_t alarmtimecounter, alarmok;
+extern uint8_t alarmtimecounter, alarmok, read_boxes;
 
 void rtc_init(void);
 void rtc_alarm_init(void);
