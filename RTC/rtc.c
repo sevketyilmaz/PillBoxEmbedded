@@ -127,7 +127,7 @@ void sendTime(void){
 		sec = RTC_TimeStruct.RTC_Seconds;
 		sprintf(str_rtc,"     #:%d:%d:%d:%d:%d:%d:%d:\n",RTC_TimeStruct.RTC_Hours,RTC_TimeStruct.RTC_Minutes,RTC_TimeStruct.RTC_Seconds,
 		RTC_DateStruct.RTC_Date,RTC_DateStruct.RTC_Month,RTC_DateStruct.RTC_Year, RTC_DateStruct.RTC_WeekDay);
-		USART_puts(USART1,str_rtc);
+		USART_puts(USART6,str_rtc);
 	}	
 }
 

@@ -45,22 +45,18 @@ unsigned int acix=0;
 unsigned int sifirKonumux=1100;
 unsigned int pwmx=0;
 
-void box_switch_pins_init(){
+void box_pins_init(){
 	GPIO_InitTypeDef GPIO_InitStruct;
 	  
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_4 | GPIO_Pin_5;
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_7 | GPIO_Pin_9 | GPIO_Pin_11 | GPIO_Pin_13 | GPIO_Pin_15;
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);		
-	GPIO_Init(GPIOC, &GPIO_InitStruct);
-}
-
-void box_pins_init(){
-	GPIO_InitTypeDef GPIO_InitStruct;
-	  
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE, ENABLE);		
+	GPIO_Init(GPIOE, &GPIO_InitStruct);
+	
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_11 | GPIO_Pin_13 | GPIO_Pin_15;
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
@@ -68,13 +64,59 @@ void box_pins_init(){
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);		
 	GPIO_Init(GPIOB, &GPIO_InitStruct);
 	
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9;
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_9 | GPIO_Pin_11;
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);		
 	GPIO_Init(GPIOD, &GPIO_InitStruct);
+	
+	//---------------
+	
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_5 | GPIO_Pin_3;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
+	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE, ENABLE);		
+	GPIO_Init(GPIOB, &GPIO_InitStruct);
+	
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_4 | GPIO_Pin_2 | GPIO_Pin_0;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
+	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);		
+	GPIO_Init(GPIOD, &GPIO_InitStruct);
+	
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_9 | GPIO_Pin_11;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
+	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);		
+	GPIO_Init(GPIOC, &GPIO_InitStruct);
+	
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_9 | GPIO_Pin_13 | GPIO_Pin_15;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
+	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);		
+	GPIO_Init(GPIOA, &GPIO_InitStruct);
+}
+
+void bluetooth_status_pins_init(){
+	GPIO_InitTypeDef GPIO_InitStruct;
+	  
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_12;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
+	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE, ENABLE);		
+	GPIO_Init(GPIOE, &GPIO_InitStruct);
 }
 
 void read_boxes_state(){
@@ -117,7 +159,7 @@ void read_boxes_state(){
 		}
 		
 		sprintf(str_pillbox, "       #:%d\n", box_current_state);
-		USART_puts(USART1, str_pillbox);
+		USART_puts(USART6, str_pillbox);
 		
 		STM_EVAL_LEDToggle(LED6);
 }
@@ -383,26 +425,26 @@ void usart_interrup_main(){
 		case 6:
 			
 			stopMotor();
-			
+
 			sifirKonumux = 0;
-			acix = 26;
+			acix = 5;
 			pwmx=(acix*20)+sifirKonumux; 
-			TIM_SetCompare1(TIM3,pwmx);
+			TIM_SetCompare1(TIM9,pwmx);
 			delay_ms(150);
 		
 			sifirKonumux = 0;
-			acix = 26;
+			acix = 5;
 			pwmx =(acix*20)+sifirKonumux; 
-			TIM_SetCompare1(TIM3,pwmx); 
+			TIM_SetCompare1(TIM9,pwmx); 
 			delay_ms(150); 
 		
-			sifirKonumux = 1200;
-			acix = 0;
+			sifirKonumux = 400;
+			acix = 89;
 			pwmx =(acix*20)+sifirKonumux; 
-			TIM_SetCompare1(TIM3,pwmx); 
+			TIM_SetCompare1(TIM9,pwmx); 
 			delay_ms(350);
 		
-			TIM_SetCompare1(TIM3,0); 
+			TIM_SetCompare1(TIM9,0); 
 			json_decref(root);
 		break;
 		

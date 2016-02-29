@@ -5,7 +5,7 @@
 uint16_t PrescalerValue = 84;
 uint32_t PeriodValue = 20000;
 
-/*Timer 3 PC6*/
+/*Timer 3 PE5*/
 void ServoPin_PWM_Output_Config() {
 	
 	GPIO_InitTypeDef GPIO_InitStructure;
@@ -13,19 +13,19 @@ void ServoPin_PWM_Output_Config() {
   TIM_OCInitTypeDef  TIM_OCInitStructure;
 
 	/* TIM3 clock enable */
-  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM9, ENABLE);
 
 	/* GPIOC clock enable */
-  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
+  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE, ENABLE);
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP ;
-  GPIO_Init(GPIOC, &GPIO_InitStructure);
+  GPIO_Init(GPIOE, &GPIO_InitStructure);
 
   /* Connect TIM3 pins to AF2 */
-  GPIO_PinAFConfig(GPIOC, GPIO_PinSource6, GPIO_AF_TIM3);
+  GPIO_PinAFConfig(GPIOE, GPIO_PinSource5, GPIO_AF_TIM9);
 
   /******************************************************************/
 
@@ -34,7 +34,7 @@ void ServoPin_PWM_Output_Config() {
   TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue - 1;
   TIM_TimeBaseStructure.TIM_ClockDivision = 0;
   TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-  TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);
+  TIM_TimeBaseInit(TIM9, &TIM_TimeBaseStructure);
 
   /* PWM1 Mode configuration */
   TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
@@ -44,12 +44,12 @@ void ServoPin_PWM_Output_Config() {
   TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
   TIM_OCInitStructure.TIM_Pulse = 0;
 
-  TIM_OC1Init(TIM3, &TIM_OCInitStructure);
-  TIM_OC1PreloadConfig(TIM3, TIM_OCPreload_Enable);
+  TIM_OC1Init(TIM9, &TIM_OCInitStructure);
+  TIM_OC1PreloadConfig(TIM9, TIM_OCPreload_Enable);
 
 
-  TIM_ARRPreloadConfig(TIM3, ENABLE);
+  TIM_ARRPreloadConfig(TIM9, ENABLE);
 
   /* TIM3 enable counter */
-  TIM_Cmd(TIM3, ENABLE);
+  TIM_Cmd(TIM9, ENABLE);
 }

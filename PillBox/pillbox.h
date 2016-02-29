@@ -59,5 +59,7 @@ uint8_t read_Alarm_Ok_Flag(uint8_t boxnumbers);
 void create_one_alarm_in_ms(time_t alarm_time);
 void open_box(void);
 
+void bluetooth_status_pins_init(void);
+
 #endif /* __PILLBOX_H */
 
