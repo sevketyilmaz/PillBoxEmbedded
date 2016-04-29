@@ -7,6 +7,7 @@
 #include "usart.h"
 #include "delay.h"
 #include "pillbox.h"
+#include "sound.h"
 
 uint8_t rtc_alarm_irqhandler_flag = 0;
 
@@ -182,7 +183,7 @@ void RTC_WKUP_IRQHandler(void)
 			alarmtimecounter--;
 		if(alarmtimecounter == 30 && alarmok == 1){
 
-				TIM1->CCR1 = 0;
+				stopMusic();
 		}
 		if(alarmtimecounter == 0 && alarmok == 1){
 

@@ -109,21 +109,14 @@ typedef enum
   */
 #define LEDn                             4
 
-#define LED4_PIN                         GPIO_Pin_12
-#define LED4_GPIO_PORT                   GPIOD
-#define LED4_GPIO_CLK                    RCC_AHB1Periph_GPIOD  
+#define LED4_PIN                         GPIO_Pin_9
+#define LED4_GPIO_PORT                   GPIOC
+#define LED4_GPIO_CLK                    RCC_AHB1Periph_GPIOC  
   
-#define LED3_PIN                         GPIO_Pin_13
-#define LED3_GPIO_PORT                   GPIOD
-#define LED3_GPIO_CLK                    RCC_AHB1Periph_GPIOD  
+#define LED3_PIN                         GPIO_Pin_8
+#define LED3_GPIO_PORT                   GPIOA
+#define LED3_GPIO_CLK                    RCC_AHB1Periph_GPIOA  
   
-#define LED5_PIN                         GPIO_Pin_14
-#define LED5_GPIO_PORT                   GPIOD
-#define LED5_GPIO_CLK                    RCC_AHB1Periph_GPIOD  
-  
-#define LED6_PIN                         GPIO_Pin_15
-#define LED6_GPIO_PORT                   GPIOD
-#define LED6_GPIO_CLK                    RCC_AHB1Periph_GPIOD
 /**
   * @}
   */ 
@@ -150,10 +143,11 @@ typedef enum
 /** @addtogroup STM32F4_DISCOVERY_LOW_LEVEL_USART
   * @{
   */
-#define COMn                             2
+//#define COMn                             2
 /**
  * @brief Definition for COM port3, connected to USART1
- */ 
+ */
+/* 
 #define EVAL_COM3                        USART1
 #define EVAL_COM3_CLK                    RCC_APB2Periph_USART1
 #define EVAL_COM3_TX_PIN                 GPIO_Pin_9
@@ -167,10 +161,11 @@ typedef enum
 #define EVAL_COM3_RX_SOURCE              GPIO_PinSource10
 #define EVAL_COM3_RX_AF                  GPIO_AF_USART1
 #define EVAL_COM3_IRQn                   USART1_IRQn
-
+*/
 /**
  * @brief Definition for COM port2, connected to USART3
  */
+ /*
 #define EVAL_COM2                        USART3
 #define EVAL_COM2_CLK                    RCC_APB1Periph_USART3
 #define EVAL_COM2_TX_PIN                 GPIO_Pin_10
@@ -184,10 +179,11 @@ typedef enum
 #define EVAL_COM2_RX_SOURCE              GPIO_PinSource11
 #define EVAL_COM2_RX_AF                  GPIO_AF_USART3
 #define EVAL_COM2_IRQn                   USART3_IRQn
-
+*/
 /**
  * @brief Definition for COM port1, connected to USART4
  */
+ /*
 #define EVAL_COM1                        USART6
 #define EVAL_COM1_CLK                    RCC_APB2Periph_USART6
 #define EVAL_COM1_TX_PIN                 GPIO_Pin_6
@@ -201,7 +197,7 @@ typedef enum
 #define EVAL_COM1_RX_SOURCE              GPIO_PinSource7
 #define EVAL_COM1_RX_AF                  GPIO_AF_USART6
 #define EVAL_COM1_IRQn                   USART6_IRQn
-
+*/
 /**
   * @}
   */ 	  

@@ -121,39 +121,37 @@ unsigned int pwm=0;
 void button_init(void);
 int main(void) {
 	
+	motor_pin_init();
+	stopMotor();
+	
+	//GPIO_WriteBit(GPIOA,GPIO_Pin_9, 1);
+
 	STM_EVAL_LEDInit(LED3);
 	STM_EVAL_LEDInit(LED4);
-	STM_EVAL_LEDInit(LED5);
-	STM_EVAL_LEDInit(LED6);
 	
 	delay_init();
-	
 	Init_USART1();
-	
+	Init_I2C();
 	rtc_init();
 	rtc_alarm_init();
 	Sound_Init();
-	
-	motor_pin_init();
-	motor_switch_pin_init();
 
+	ServoPin_Delay_Config();
+	GPIO_ResetBits(GPIOE, GPIO_Pin_5);
+	motor_switch_pin_init();
+	Sound_Init();
 	Init_ADCVbat();
 	ADC_SoftwareStartConv(ADC1);
-	
-	Init_I2C();
-	
 	button_init();
-	
-	ServoPin_PWM_Output_Config();
-	
-  //box_pins_init();
-	bluetooth_status_pins_init();
+  box_pins_init();
+	//bluetooth_status_pins_init();
 	
   //How to write and read data from EEPROM
-	I2C_writeBytes(0x50, 0, 1, &write_byte);		
+	I2C_writeBytes(0x50<<1, 0, 1, &write_byte);		
 	I2C_readBytes(0x50<<1, 0, 1, &read_byte);	
 	if(read_byte == 255)
-		STM_EVAL_LEDOn(LED3);
+		STM_EVAL_LEDOn(LED4);
+	
 	
 	/*
 	//How to get milisecond from time
@@ -168,53 +166,60 @@ int main(void) {
   printf("seconds since the Epoch: %ld\n", (long) t_of_day);
 	*/
 	
+	
 	printf("Initilazation finish....\n");
 	printf("All Alarm Disable....\n");
 	RTC_AlarmCmd(RTC_Alarm_A, DISABLE);
 	
-	//Sound
-	TIM_SetCompare1(TIM13,0); 
 	
 	//Servo Correction
-	TIM_SetCompare1(TIM9,0); //pwm'i guncelle
-	aci=0;
-  pwm=(aci*20)+sifirKonumu;
-  TIM_SetCompare1(TIM9,pwm);
-  delay_ms(2000);
-//  sifirKonumu = 400;
-//	pwm=(aci*20)+sifirKonumu; //pwm 500-550 iken 0 derece konumunda bekler
-//	TIM_SetCompare1(TIM9,pwm); //pwm'i guncelle
-//	delay_ms(20); //acinin her degismesinde 10ms bekler
-	
-	aci = 89;
-	pwm=(aci*20)+sifirKonumu; //pwm 500-550 iken 0 derece konumunda bekler
-	TIM_SetCompare1(TIM9,pwm); //pwm'i guncelle
-	delay_ms(350); //acinin her degismesinde 10ms bekler
-	
-	TIM_SetCompare1(TIM9,0); //pwm'i guncelle	
+	for(k=0; k<70; k++){ //middle
+		GPIO_SetBits(GPIOE, GPIO_Pin_5);
+		delay_us(1500);
+		GPIO_ResetBits(GPIOE, GPIO_Pin_5);
+		delay_us(18500);
+	}
 	
 	/*
-	while(GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_3)){
-		stepper();
-		delay_us(3300);
+	for(k=0; k<50; k++){ //right
+		GPIO_SetBits(GPIOE, GPIO_Pin_5);
+		delay_us(500);
+		GPIO_ResetBits(GPIOE, GPIO_Pin_5);
+		delay_us(19500);
 	}
-	for(k=0;k<5;k++){
+	
+	
+	for(k=0; k<155; k++){ //left
+		GPIO_SetBits(GPIOE, GPIO_Pin_5);
+		delay_us(2500);
+		GPIO_ResetBits(GPIOE, GPIO_Pin_5);
+		delay_us(17500);
+	}
+	*/
+	Direction = 1;
+	//First Initilazation
+	while(!GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_1)){
+		stepper();
+		delay_us(3000);
+	}
+	stopMotor();
+
+	for(k=0;k<21;k++){
 		readAlarmtoEEPROM(k);
 	}
-	for(k=0; k<5; k++){
-		//YAnlislik var!!!!!!!!!!!!!!!!!!!!!!!!!!!***************************
+	for(k=0; k<21; k++){
 		status = boxes.pillbox[k].alarm_ok;//
-		//double difftime(time_t time1, time_t time0);//time1 - time0
 		alrmtime = boxes.pillbox[k].alarmTime;
 		currentime = get_current_time_ms();
 		remaining_alarmtime = difftime(alrmtime, currentime);			//alarmtime - currenttime
 		printf("Remaining alarm time%d: %d\n",k, remaining_alarmtime);
 	  printf("%s \n", ctime(&currentime));
+		if(alrmtime == 0)
+			break;
 		if(status == 0 & remaining_alarmtime>0){
 			which_alarm_created = k; 
-			//create_one_alarm(boxes.pillbox[k].alarmTime);
 			create_one_alarm_in_ms(boxes.pillbox[k].alarmTime);
-
+			set_Box_State_Flag(k,CLOSE_FULL);
 			next_box = boxes.pillbox[k].box_number;
 			go_to_box(current_box,next_box);
 			break;
@@ -231,11 +236,8 @@ int main(void) {
 				open_box();
 			}	
 		}
-	}
-	*/
+	}	
 	
-  STM_EVAL_LEDOn(LED3);
-
 	/*Box Gidis Testi*/
 	/*
 	delay_ms(2000);
@@ -266,46 +268,84 @@ int main(void) {
 	go_to_box(7,8);
 	open_box();
 	
+	go_to_box(8,9);
+	open_box();
+	
+	go_to_box(9,10);
+	open_box();
+	
+	go_to_box(10,11);
+	open_box();
+	
+	go_to_box(11,12);
+	open_box();
+	
+	go_to_box(12,13);
+	open_box();
+	
+	go_to_box(13,14);
+	open_box();
+	
+	go_to_box(14,15);
+	open_box();
+	
+	go_to_box(15,16);
+	open_box();
+	
+	go_to_box(16,17);
+	open_box();
+	
+	go_to_box(17,18);
+	open_box();
+	
+	go_to_box(18,19);
+	open_box();
+	
+	go_to_box(19,20);
+	open_box();
+	
 	delay_ms(2000);
 	*/
 
 	while (1) {
 		
-		/*MOTOR CONTROL*/
-//		if(Motor_Status == 1) {
-//			stepper();
-//			delay_us(2500);//3300
-//		}	
-//		else{	
-//			stopMotor();
-//		}
+		/*Card Test*/
+		//STM_EVAL_LEDToggle(LED3);
+		//STM_EVAL_LEDToggle(LED4);
+		//delay_ms(100);
 		
+		
+		/*MOTOR CONTROL*/
+		/*
+		if(Motor_Status == 1) {
+			stepper();
+			delay_us(2500);//3300
+		}	
+		else{	
+			stopMotor();
+		}
+		*/
 		/*BOX SWITCHES CONTROL*/
-//		if(GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_12) == 1){			
-//			STM_EVAL_LEDOn(LED3);
-//		}
-//		else{		
-//			STM_EVAL_LEDOff(LED3);
-//		}		
-//		if(GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_9) == 1){			
-//			STM_EVAL_LEDOn(LED4);
-//		}
-//		else{			
-//			STM_EVAL_LEDOff(LED4);
-//		}	
-//		if(GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_9) == 1){			
-//			STM_EVAL_LEDOn(LED5);
-//		}
-//		else{		
-//			STM_EVAL_LEDOff(LED5);
-//		}	
-//		if(GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_15) == 1){			
-//			STM_EVAL_LEDOn(LED6);
-//		}
-//		else{		
-//			STM_EVAL_LEDOff(LED6);
-//		}
-
+		/*
+		if(GPIO_ReadInputDataBit(Box15_Port, Box15) == 1){			
+			STM_EVAL_LEDOn(LED3);
+		}
+		else{		
+			STM_EVAL_LEDOff(LED3);
+		}		
+		if(GPIO_ReadInputDataBit(Box14_Port, Box14) == 1){			
+			STM_EVAL_LEDOn(LED4);
+		}
+		else{			
+			STM_EVAL_LEDOff(LED4);
+		}	
+		if(GPIO_ReadInputDataBit(Box13_Port, Box13) == 1){			
+			STM_EVAL_LEDOn(LED5);
+		}
+		else{		
+			STM_EVAL_LEDOff(LED5);
+		}	
+		*/
 
 			/*MOTOR SWITCHES CONTROL*/
 //		if(GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_1) == 1){			
@@ -333,22 +373,21 @@ int main(void) {
 		
 		
 		if(read_boxes == 1){
-			read_boxes_state();
-			read_boxes = 0;
+			read_boxes_state(); 
+		  read_boxes = 0;
+			readEEPROMtosend();
 		}
 		
 		/*User Button*/
-		if(GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_0))	{
+		if(GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_0) == 0)	{
 			sendTime();
-//			for(k=0;k<5;k++){
-//				readAlarmtoEEPROM(k);
-//			}
 		}
 		
 		/*Flags*/
 		if(flag_usart == 1){
 			usart_interrup_main();
 		}		
+		
 		
 		if(rtc_alarm_irqhandler_flag == 1){
 		
@@ -363,8 +402,8 @@ int main(void) {
 			current_box = boxes.pillbox[which_alarm_created].box_number;
 			
 			alarmok = 1;
-			alarmtimecounter = 60;
-			TIM1->CCR1 = 20;
+			alarmtimecounter = 10;
+			playMusic();
 			
 			set_Alarm_Ok_Flag(which_alarm_created, 1);
 			
@@ -373,24 +412,14 @@ int main(void) {
 			next_box = boxes.pillbox[which_alarm_created].box_number;
 
 			
-			if(which_alarm_created<5){
-				//create_one_alarm(boxes.pillbox[which_alarm_created].alarmTime);
-				create_one_alarm_in_ms(boxes.pillbox[which_alarm_created].alarmTime);
-				go_to_box(current_box,next_box);
+			if(which_alarm_created<21){
+				if(boxes.pillbox[which_alarm_created].alarmTime != 0) {			
+					create_one_alarm_in_ms(boxes.pillbox[which_alarm_created].alarmTime);					
+					set_Box_State_Flag(which_alarm_created,CLOSE_FULL);					
+					go_to_box(current_box,next_box);
+				}	
 			}	
 		}
-		
-		if(which_alarm_created == 5) {
-			
-			current_box=0;
-			next_box=0;
-			Direction = 1;
-			while(GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_3)){
-				stepper();
-				delay_us(3300);
-			}
-		}
-		
 	}
 }
 

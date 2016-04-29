@@ -19,6 +19,9 @@
 #include "String.h"
 #include "Jansson.h"
 
+char send_message[1024];
+int l=0;
+
 struct Boxes boxes;
 uint8_t which_alarm_created;
 
@@ -31,14 +34,14 @@ char *token;
 char *(buffer[40]);
 char copy1[40][40];
 int token_size=0;
-int x;
+int x,c;
 uint32_t subsecond;
 int message,led_status,current_time,bN,bS,aT,motor_direction,motor_onoff;
 
 json_t *root, *message_obj, *led_obj, *current_time_obj, *bN_obj, *bS_obj, *aT_obj, *motor_obj, *motor_direction_obj;
 json_error_t error;
 
- int next_box=0, current_box=0;
+int next_box=0, current_box=0;
 
 
 unsigned int acix=0;
@@ -46,9 +49,10 @@ unsigned int sifirKonumux=1100;
 unsigned int pwmx=0;
 
 void box_pins_init(){
+	
 	GPIO_InitTypeDef GPIO_InitStruct;
 	  
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_7 | GPIO_Pin_9 | GPIO_Pin_11 | GPIO_Pin_13 | GPIO_Pin_15;
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_15 | GPIO_Pin_14 |GPIO_Pin_13 | GPIO_Pin_12 | GPIO_Pin_11 | GPIO_Pin_10 | GPIO_Pin_9 | GPIO_Pin_8 | GPIO_Pin_7;
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
@@ -56,7 +60,7 @@ void box_pins_init(){
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE, ENABLE);		
 	GPIO_Init(GPIOE, &GPIO_InitStruct);
 	
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_11 | GPIO_Pin_13 | GPIO_Pin_15;
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_1 |GPIO_Pin_0;
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
@@ -64,33 +68,7 @@ void box_pins_init(){
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);		
 	GPIO_Init(GPIOB, &GPIO_InitStruct);
 	
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_9 | GPIO_Pin_11;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
-	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);		
-	GPIO_Init(GPIOD, &GPIO_InitStruct);
-	
-	//---------------
-	
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_5 | GPIO_Pin_3;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
-	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE, ENABLE);		
-	GPIO_Init(GPIOB, &GPIO_InitStruct);
-	
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_4 | GPIO_Pin_2 | GPIO_Pin_0;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
-	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);		
-	GPIO_Init(GPIOD, &GPIO_InitStruct);
-	
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_9 | GPIO_Pin_11;
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_5 |GPIO_Pin_4;
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
@@ -98,7 +76,25 @@ void box_pins_init(){
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);		
 	GPIO_Init(GPIOC, &GPIO_InitStruct);
 	
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_9 | GPIO_Pin_13 | GPIO_Pin_15;
+	//---------------
+	
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_11 | GPIO_Pin_10 | GPIO_Pin_9 | GPIO_Pin_8;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
+	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);		
+	GPIO_Init(GPIOD, &GPIO_InitStruct);
+	
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_15 | GPIO_Pin_14 | GPIO_Pin_13 | GPIO_Pin_12;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
+	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);		
+	GPIO_Init(GPIOB, &GPIO_InitStruct);
+	
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_15;
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
@@ -120,48 +116,57 @@ void bluetooth_status_pins_init(){
 }
 
 void read_boxes_state(){
-		int32_t box_current_state=0;
-		char str_pillbox[50];
-		/*Box 1*/
-		if(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13) == 1){
-			box_current_state = (box_current_state | 0x0001);
+switch(which_alarm_created-1){
+			case 0:
+				/*Box 1*/
+				if(GPIO_ReadInputDataBit(Box1_Port, Box1) == 1){
+					set_Box_State_Flag(which_alarm_created-1, OPEN_FULL);
+				}
+				else{
+					set_Box_State_Flag(which_alarm_created-1, CLOSE_DONE);
+				}
+				break;
+				
+			case 1:
+				/*Box 2*/
+				if(GPIO_ReadInputDataBit(Box2_Port, Box2) == 1){
+					set_Box_State_Flag(which_alarm_created-1, OPEN_FULL);
+				}
+				else{
+					set_Box_State_Flag(which_alarm_created-1, CLOSE_DONE);
+				}
+				break;
+			
+			case 2:
+				/*Box 3*/
+				if(GPIO_ReadInputDataBit(Box3_Port, Box3) == 1){
+					set_Box_State_Flag(which_alarm_created-1, OPEN_FULL);
+				}
+				else{
+					set_Box_State_Flag(which_alarm_created-1, CLOSE_DONE);
+				}
+				break;
+				
+			case 3:
+				/*Box 4*/
+				if(GPIO_ReadInputDataBit(Box4_Port, Box4) == 1){
+					set_Box_State_Flag(which_alarm_created-1, OPEN_FULL);
+				}
+				else{
+					set_Box_State_Flag(which_alarm_created-1, CLOSE_DONE);
+				}
+				break;
+			
+			case 4:	
+				/*Box 5*/
+				if(GPIO_ReadInputDataBit(Box5_Port, Box5) == 1){
+					set_Box_State_Flag(which_alarm_created-1, OPEN_FULL);
+				}
+				else{
+					set_Box_State_Flag(which_alarm_created-1, CLOSE_DONE);
+				}
+				break;
 		}
-		else{
-			box_current_state = (box_current_state & 0xFFFE);
-		}
-		/*Box 2*/
-		if(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_14) == 1){
-			box_current_state = (box_current_state | 0x0002);
-		}
-		else{
-			box_current_state = (box_current_state & 0xFFFD);
-		}
-		/*Box 3*/
-		if(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_15) == 1){
-			box_current_state = (box_current_state | 0x0004);
-		}
-		else{
-			box_current_state = (box_current_state & 0xFFFB);
-		}
-		/*Box 4*/
-		if(GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_8) == 1){
-			box_current_state = (box_current_state | 0x0008);
-		}
-		else{
-			box_current_state = (box_current_state & 0xFFF7);
-		}
-		/*Box 5*/
-		if(GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_9) == 1){
-			box_current_state = (box_current_state) | (0x0010);
-		}
-		else{
-			box_current_state = (box_current_state & 0xFFEF);
-		}
-		
-		sprintf(str_pillbox, "       #:%d\n", box_current_state);
-		USART_puts(USART6, str_pillbox);
-		
-		STM_EVAL_LEDToggle(LED6);
 }
 
 void createAlarm(uint8_t hour, uint8_t minutes, uint8_t dayOfWeek) {
@@ -248,6 +253,26 @@ uint8_t read_Alarm_Ok_Flag(uint8_t boxnumbers){
 		return flag;
 }
 
+void set_Box_State_Flag(uint8_t boxnumbers, uint8_t box_state){
+		uint8_t byte_size = 8; // Number of byte for each boxes
+		uint8_t start_address;
+		//uint8_t end_address, length; 
+		
+		start_address = 1 + byte_size * boxnumbers;
+		boxes.pillbox[boxnumbers].box_state = box_state;	
+		eeprom_write_byte(0x50<<1, start_address+5,	box_state);		
+}
+
+uint8_t read_Box_State_Flag(uint8_t boxnumbers){
+		uint8_t byte_size = 8; // Number of byte for each boxes
+		uint8_t start_address;
+		uint8_t flag;
+	
+		start_address = 1 + byte_size * boxnumbers;
+		flag = eeprom_read_byte(0x50<<1, start_address+5);
+		return flag;
+}
+
 void readAlarmtoEEPROM(uint8_t boxnumbers){
 		
 		int read_data;
@@ -263,11 +288,11 @@ void readAlarmtoEEPROM(uint8_t boxnumbers){
 		alarmtime = read_data;
 		printf("Read Alarm %d: %s ", boxnumbers, ctime(&alarmtime));
 	
-		flag = eeprom_read_byte(0x50<<1, start_address+4);	
+		flag = eeprom_read_byte(0x50<<1, start_address+4);//box_numbers	
 		printf("  | %d | ", flag);
 		boxes.pillbox[boxnumbers].box_number  = flag;
 
-		flag = eeprom_read_byte(0x50<<1, start_address+5);
+		flag = eeprom_read_byte(0x50<<1, start_address+5);//box_state
 		printf("  | %d | ", flag);
 		boxes.pillbox[boxnumbers].box_state  = flag;
 
@@ -275,9 +300,33 @@ void readAlarmtoEEPROM(uint8_t boxnumbers){
 		printf("  | %d | ", flag);
 		boxes.pillbox[boxnumbers].alarm_created = flag;
 
-		flag = eeprom_read_byte(0x50<<1, start_address+7);	
+		flag = eeprom_read_byte(0x50<<1, start_address+7);//alarm_ok	
 		printf("  | %d |\n", flag);
 		boxes.pillbox[boxnumbers].alarm_ok = flag;
+}
+
+void readEEPROMtosend(){
+		uint8_t esn;// Eeprom State Number
+		uint8_t byte_size = 8;
+		uint8_t start_address;
+  	uint8_t box_number, box_state;
+		
+		sprintf(send_message, "[{\"mS\":%d, \"cT\":%d},", 1,2);
+		USART_puts(USART6, send_message);
+		
+	for(esn=0; esn<21; esn++){
+			start_address = 1 + byte_size * esn;
+			
+			box_number = eeprom_read_byte(0x50<<1, start_address+4);//box_number
+			box_state = eeprom_read_byte(0x50<<1, start_address+5);//box_state
+			
+			if(esn == 20) {
+				sprintf(send_message, "{\"bN\":%d, \"bs\":%d}]\n",  box_number, box_state);
+				USART_puts(USART6, send_message);
+			}
+			sprintf(send_message, "{\"bN\":%d, \"bs\":%d},", box_number, box_state);
+			USART_puts(USART6, send_message);
+	}		
 }
 
 void create_one_alarm(time_t alarm_time){
@@ -358,7 +407,7 @@ void usart_set_time(time_t current_time){
 
 void open_box(){
 			stopMotor();
-
+	/*
 			sifirKonumux = 0;
 			acix = 26;
 			pwmx=(acix*20)+sifirKonumux; 
@@ -378,6 +427,19 @@ void open_box(){
 			delay_ms(350);
 		
 			TIM_SetCompare1(TIM3,0); 
+	*/
+			for(c=0; c<10; c++){ //right
+				GPIO_SetBits(GPIOE, GPIO_Pin_5);
+				delay_us(500);
+				GPIO_ResetBits(GPIOE, GPIO_Pin_5);
+				delay_us(19500);
+			}
+			for(c=0; c<150; c++){ //middle
+				GPIO_SetBits(GPIOE, GPIO_Pin_5);
+				delay_us(1500);
+				GPIO_ResetBits(GPIOE, GPIO_Pin_5);
+				delay_us(18500);
+			}
 }
 
 void usart_interrup_main(){
@@ -425,26 +487,19 @@ void usart_interrup_main(){
 		case 6:
 			
 			stopMotor();
-
-			sifirKonumux = 0;
-			acix = 5;
-			pwmx=(acix*20)+sifirKonumux; 
-			TIM_SetCompare1(TIM9,pwmx);
-			delay_ms(150);
-		
-			sifirKonumux = 0;
-			acix = 5;
-			pwmx =(acix*20)+sifirKonumux; 
-			TIM_SetCompare1(TIM9,pwmx); 
-			delay_ms(150); 
-		
-			sifirKonumux = 400;
-			acix = 89;
-			pwmx =(acix*20)+sifirKonumux; 
-			TIM_SetCompare1(TIM9,pwmx); 
-			delay_ms(350);
-		
-			TIM_SetCompare1(TIM9,0); 
+			for(c=0; c<10; c++){ //right
+				GPIO_SetBits(GPIOE, GPIO_Pin_5);
+				delay_us(500);
+				GPIO_ResetBits(GPIOE, GPIO_Pin_5);
+				delay_us(19500);
+			}
+			for(c=0; c<150; c++){ //middle
+				GPIO_SetBits(GPIOE, GPIO_Pin_5);
+				delay_us(1500);
+				GPIO_ResetBits(GPIOE, GPIO_Pin_5);
+				delay_us(18500);
+			}
+	
 			json_decref(root);
 		break;
 		
@@ -466,23 +521,33 @@ void usart_interrup_main(){
 			led_obj = json_object_get(root,"led_status");
 			led_status = json_integer_value(led_obj);
 			if(led_status == 0)
-				STM_EVAL_LEDOff(LED6);
+				STM_EVAL_LEDOff(LED3);
 			else
-				STM_EVAL_LEDOn(LED6);
+				STM_EVAL_LEDOn(LED3);
 			json_decref(root);
 		break;
 
 		case 2:
-			current_time_obj = json_object_get(root,"current_time");
+			current_time_obj = json_object_get(root,"cT");
 			current_time = json_integer_value(current_time_obj);
 			usart_set_time(current_time);
 			json_decref(root);
+			readEEPROMtosend();
+
 		break;			
 		
 		case 1:
 			
 			clear_eeprom();
-			
+			//First Initilazation
+			Direction = 1;
+			while(!GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_1)){
+				stepper();
+				delay_us(3000);
+			}
+			current_box = 0;
+			next_box = 0;
+		
 			current_time_obj = json_object_get(root,"cT");
 			current_time = json_integer_value(current_time_obj);
 		  usart_set_time(current_time);
@@ -523,6 +588,8 @@ void usart_interrup_main(){
 					//create_one_alarm(aT);
 					create_one_alarm_in_ms(aT);
 					which_alarm_created = 0;
+					
+					set_Box_State_Flag(which_alarm_created,CLOSE_FULL);
 				}	
 			}
 			

@@ -85,12 +85,9 @@
 /** @defgroup STM32F4_DISCOVERY_LOW_LEVEL_Private_Variables
   * @{
   */ 
-GPIO_TypeDef* GPIO_PORT[LEDn] = {LED4_GPIO_PORT, LED3_GPIO_PORT, LED5_GPIO_PORT,
-                                 LED6_GPIO_PORT};
-const uint16_t GPIO_PIN[LEDn] = {LED4_PIN, LED3_PIN, LED5_PIN,
-                                 LED6_PIN};
-const uint32_t GPIO_CLK[LEDn] = {LED4_GPIO_CLK, LED3_GPIO_CLK, LED5_GPIO_CLK,
-                                 LED6_GPIO_CLK};
+GPIO_TypeDef* GPIO_PORT[LEDn] = {LED4_GPIO_PORT, LED3_GPIO_PORT};
+const uint16_t GPIO_PIN[LEDn] = {LED4_PIN, LED3_PIN};
+const uint32_t GPIO_CLK[LEDn] = {LED4_GPIO_CLK, LED3_GPIO_CLK};
 
 GPIO_TypeDef* BUTTON_PORT[BUTTONn] = {USER_BUTTON_GPIO_PORT }; 
 
@@ -105,7 +102,7 @@ const uint8_t BUTTON_PORT_SOURCE[BUTTONn] = {USER_BUTTON_EXTI_PORT_SOURCE};
 const uint8_t BUTTON_PIN_SOURCE[BUTTONn] = {USER_BUTTON_EXTI_PIN_SOURCE }; 
 const uint8_t BUTTON_IRQn[BUTTONn] = {USER_BUTTON_EXTI_IRQn };
 
-
+/*
 USART_TypeDef* COM_USART[COMn] = {EVAL_COM1,EVAL_COM2}; 
 
 GPIO_TypeDef* COM_TX_PORT[COMn] = {EVAL_COM1_TX_GPIO_PORT, EVAL_COM2_TX_GPIO_PORT};
@@ -131,7 +128,7 @@ const uint16_t COM_TX_AF[COMn] = {EVAL_COM1_TX_AF, EVAL_COM2_TX_AF};
 const uint16_t COM_RX_AF[COMn] = {EVAL_COM1_RX_AF, EVAL_COM2_RX_AF};
 
 NVIC_InitTypeDef   NVIC_InitStructure;
-
+*/
 /**
   * @}
   */ 
@@ -293,45 +290,46 @@ uint32_t STM_EVAL_PBGetState(Button_TypeDef Button)
   *   contains the configuration information for the specified USART peripheral.
   * @retval None
   */
-void STM_EVAL_COMInit(COM_TypeDef COM, USART_InitTypeDef* USART_InitStruct)
-{
-  GPIO_InitTypeDef GPIO_InitStructure;
 
-  /* Enable GPIO clock */
-  RCC_AHB1PeriphClockCmd(COM_TX_PORT_CLK[COM] | COM_RX_PORT_CLK[COM], ENABLE);
+//void STM_EVAL_COMInit(COM_TypeDef COM, USART_InitTypeDef* USART_InitStruct)
+//{
+//  GPIO_InitTypeDef GPIO_InitStructure;
 
-   /* Enable UART clock */
-  RCC_APB2PeriphClockCmd(COM_USART_CLK[COM], ENABLE);
-  
-    /* Enable UART clock */
-  //RCC_APB1PeriphClockCmd(COM_USART_CLK[COM], ENABLE);	 
+//  /* Enable GPIO clock */
+//  RCC_AHB1PeriphClockCmd(COM_TX_PORT_CLK[COM] | COM_RX_PORT_CLK[COM], ENABLE);
 
-  /* Connect PXx to USARTx_Tx*/
-  GPIO_PinAFConfig(COM_TX_PORT[COM], COM_TX_PIN_SOURCE[COM], COM_TX_AF[COM]);
+//   /* Enable UART clock */
+//  RCC_APB2PeriphClockCmd(COM_USART_CLK[COM], ENABLE);
+//  
+//    /* Enable UART clock */
+//  //RCC_APB1PeriphClockCmd(COM_USART_CLK[COM], ENABLE);	 
 
-  /* Connect PXx to USARTx_Rx*/
-  GPIO_PinAFConfig(COM_RX_PORT[COM], COM_RX_PIN_SOURCE[COM], COM_RX_AF[COM]);
+//  /* Connect PXx to USARTx_Tx*/
+//  GPIO_PinAFConfig(COM_TX_PORT[COM], COM_TX_PIN_SOURCE[COM], COM_TX_AF[COM]);
 
-  /* Configure USART Tx as alternate function  */
-  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+//  /* Connect PXx to USARTx_Rx*/
+//  GPIO_PinAFConfig(COM_RX_PORT[COM], COM_RX_PIN_SOURCE[COM], COM_RX_AF[COM]);
 
-  GPIO_InitStructure.GPIO_Pin = COM_TX_PIN[COM];
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_Init(COM_TX_PORT[COM], &GPIO_InitStructure);
+//  /* Configure USART Tx as alternate function  */
+//  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+//  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+//  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 
-  /* Configure USART Rx as alternate function  */
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-  GPIO_InitStructure.GPIO_Pin = COM_RX_PIN[COM];
-  GPIO_Init(COM_RX_PORT[COM], &GPIO_InitStructure);
+//  GPIO_InitStructure.GPIO_Pin = COM_TX_PIN[COM];
+//  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+//  GPIO_Init(COM_TX_PORT[COM], &GPIO_InitStructure);
 
-  /* USART configuration */
-  USART_Init(COM_USART[COM], USART_InitStruct);
-    
-  /* Enable USART */
-  USART_Cmd(COM_USART[COM], ENABLE);
-}
+//  /* Configure USART Rx as alternate function  */
+//  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+//  GPIO_InitStructure.GPIO_Pin = COM_RX_PIN[COM];
+//  GPIO_Init(COM_RX_PORT[COM], &GPIO_InitStructure);
+
+//  /* USART configuration */
+//  USART_Init(COM_USART[COM], USART_InitStruct);
+//    
+//  /* Enable USART */
+//  USART_Cmd(COM_USART[COM], ENABLE);
+//}
 
 /**
   * @}
