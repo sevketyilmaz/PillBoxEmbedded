@@ -138,6 +138,7 @@ void open_box(void);
 void bluetooth_status_pins_init(void);
 
 void readEEPROMtosend(void);
+void clear_structure(void);
 
 #endif /* __PILLBOX_H */
 

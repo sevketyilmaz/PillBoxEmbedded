@@ -2,10 +2,19 @@
 #include "i2c.h"
 
 void clear_eeprom() {
-	int e;
-	for(e=0; e<256; e++) {
-		eeprom_write_byte(0x50<<1, e, 0);
-	}
+	int esn;
+	uint8_t byte_size = 8; // Number of byte for each boxes
+	uint8_t start_address;
+	for(esn=0; esn<21; esn++){
+		start_address = 1 + byte_size * esn;
+			
+		eeprom_write_long(0x50<<1, start_address,   0);
+		eeprom_write_byte(0x50<<1, start_address+4, 255);		
+		eeprom_write_byte(0x50<<1, start_address+5, 0);		
+		eeprom_write_byte(0x50<<1, start_address+6,	0);		
+		eeprom_write_byte(0x50<<1, start_address+7,	0);	
+
+	}		
 }
 
 void eeprom_write_byte( uint8_t deviceaddress, uint8_t eeaddress, uint8_t data ) {

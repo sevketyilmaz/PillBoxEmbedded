@@ -167,9 +167,9 @@ int main(void) {
 	*/
 	
 	
-	printf("Initilazation finish....\n");
-	printf("All Alarm Disable....\n");
-	RTC_AlarmCmd(RTC_Alarm_A, DISABLE);
+	//printf("Initilazation finish....\n");
+	//printf("All Alarm Disable....\n");
+	//RTC_AlarmCmd(RTC_Alarm_A, DISABLE);
 	
 	
 	//Servo Correction
@@ -217,6 +217,7 @@ int main(void) {
 		if(alrmtime == 0)
 			break;
 		if(status == 0 & remaining_alarmtime>0){
+			STM_EVAL_LEDToggle(LED3);
 			which_alarm_created = k; 
 			create_one_alarm_in_ms(boxes.pillbox[k].alarmTime);
 			set_Box_State_Flag(k,CLOSE_FULL);
@@ -370,8 +371,7 @@ int main(void) {
 			adim++;
 		}	
 		*/
-		
-		
+				
 		if(read_boxes == 1){
 			read_boxes_state(); 
 		  read_boxes = 0;
@@ -393,7 +393,6 @@ int main(void) {
 		
 			rtc_alarm_irqhandler_flag = 0;
 			
-			STM_EVAL_LEDOff(LED5);
 			open_box();
 
 			boxes.pillbox[which_alarm_created].alarm_ok = 1;
