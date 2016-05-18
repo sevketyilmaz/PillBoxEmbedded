@@ -55,6 +55,8 @@ void stopMusic(){
 
 void playMusic() {
 	int i;
+	STM_EVAL_LEDOff(LED3);
+
   for (i = 0; i < sizeof(notes); i++) {
     if (notes[i] == ' ') {
       delay_us(beats[i] * tempo*1000); // rest

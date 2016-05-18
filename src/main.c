@@ -124,8 +124,6 @@ int main(void) {
 	motor_pin_init();
 	stopMotor();
 	
-	//GPIO_WriteBit(GPIOA,GPIO_Pin_9, 1);
-
 	STM_EVAL_LEDInit(LED3);
 	STM_EVAL_LEDInit(LED4);
 	
@@ -173,7 +171,7 @@ int main(void) {
 	
 	
 	//Servo Correction
-	for(k=0; k<70; k++){ //middle
+	for(k=0; k<63; k++){ //middle
 		GPIO_SetBits(GPIOE, GPIO_Pin_5);
 		delay_us(1500);
 		GPIO_ResetBits(GPIOE, GPIO_Pin_5);
@@ -207,6 +205,7 @@ int main(void) {
 	for(k=0;k<21;k++){
 		readAlarmtoEEPROM(k);
 	}
+	
 	for(k=0; k<21; k++){
 		status = boxes.pillbox[k].alarm_ok;//
 		alrmtime = boxes.pillbox[k].alarmTime;
@@ -244,64 +243,85 @@ int main(void) {
 	delay_ms(2000);
 	
 	open_box();
+	delay_ms(2000);
 
 	go_to_box(0,1);
 	open_box();
+	delay_ms(2000);
 	
 	go_to_box(1,2);
 	open_box();
+	delay_ms(2000);
 	
 	go_to_box(2,3);
 	open_box();
+	delay_ms(2000);
 	
 	go_to_box(3,4);
 	open_box();
+	delay_ms(2000);
 	
 	go_to_box(4,5);
 	open_box();
+	delay_ms(2000);
 	
 	go_to_box(5,6);
 	open_box();
+	delay_ms(2000);
 	
 	go_to_box(6,7);
 	open_box();
+	delay_ms(2000);
 	
 	go_to_box(7,8);
 	open_box();
+	delay_ms(2000);
 	
 	go_to_box(8,9);
 	open_box();
+	delay_ms(2000);
 	
 	go_to_box(9,10);
 	open_box();
+	delay_ms(2000);
 	
 	go_to_box(10,11);
 	open_box();
+	delay_ms(2000);
 	
 	go_to_box(11,12);
 	open_box();
+	delay_ms(2000);
 	
 	go_to_box(12,13);
 	open_box();
+	delay_ms(2000);
 	
 	go_to_box(13,14);
 	open_box();
+	delay_ms(2000);
 	
 	go_to_box(14,15);
 	open_box();
+	delay_ms(2000);
 	
 	go_to_box(15,16);
 	open_box();
+	delay_ms(2000);
 	
 	go_to_box(16,17);
 	open_box();
+	delay_ms(2000);
 	
 	go_to_box(17,18);
 	open_box();
-	
+		delay_ms(2000);
+
 	go_to_box(18,19);
 	open_box();
 	
+	delay_ms(2000);
+
 	go_to_box(19,20);
 	open_box();
 	
@@ -413,7 +433,8 @@ int main(void) {
 			
 			if(which_alarm_created<21){
 				if(boxes.pillbox[which_alarm_created].alarmTime != 0) {			
-					create_one_alarm_in_ms(boxes.pillbox[which_alarm_created].alarmTime);					
+					create_one_alarm_in_ms(boxes.pillbox[which_alarm_created].alarmTime);
+					STM_EVAL_LEDOn(LED3);
 					set_Box_State_Flag(which_alarm_created,CLOSE_FULL);					
 					go_to_box(current_box,next_box);
 				}	

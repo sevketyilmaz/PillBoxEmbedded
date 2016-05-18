@@ -376,7 +376,7 @@ void clear_structure(){
 
 void open_box(){
 			stopMotor();
-			for(c=0; c<10; c++){ //right
+			for(c=0; c<9; c++){ //right
 				GPIO_SetBits(GPIOE, GPIO_Pin_5);
 				delay_us(500);
 				GPIO_ResetBits(GPIOE, GPIO_Pin_5);
@@ -537,6 +537,7 @@ void usart_interrup_main(){
 					
 					//create_one_alarm(aT);
 					create_one_alarm_in_ms(aT);
+					STM_EVAL_LEDOn(LED3);
 					which_alarm_created = 0;
 					
 					set_Box_State_Flag(which_alarm_created,CLOSE_FULL);

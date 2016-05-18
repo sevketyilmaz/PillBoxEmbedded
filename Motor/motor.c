@@ -47,30 +47,50 @@ int m=0;
 
 void go_to_box(uint8_t current_boxnumber, uint8_t next_boxnumber){
 			
-	int a = 259;
-	int b = 517; 
+	int a = 263;
+	int b = 509; 
 	int n = 0;
 	int step_count = 0;
 
 	n = next_boxnumber - current_boxnumber;
-	
-	if(n>0) {
-		Direction = 0;
-	}	
-	else {
-		Direction = 1;
-		n = -n;
-		current_boxnumber = next_boxnumber;
-		next_boxnumber = current_boxnumber +n;
+	if(next_boxnumber == 0 | next_boxnumber == 20){
+		switch(next_boxnumber){
+			case 0:
+				Direction = 1;
+				while(!GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_1)){
+					stepper();
+					delay_us(3000);
+				}
+				stopMotor();
+				break;
+			case 20:
+				Direction = 0;
+				while(!GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_2)){
+					stepper();
+					delay_us(3000);
+				}
+				stopMotor();
+				break;
+		}
 	}
+	else {	
+		if(n>0) {
+			Direction = 0;
+		}	
+		else {
+			Direction = 1;
+			n = -n;
+			current_boxnumber = next_boxnumber;
+			next_boxnumber = current_boxnumber +n;
+		}
 	
-	step_count = a*n + (b-a)*((next_boxnumber/3) - (current_boxnumber/3));
+		step_count = a*n + (b-a)*((next_boxnumber/3) - (current_boxnumber/3));
 	
-	for(m=0;m<step_count;m++) {		
-		stepper();
-		delay_us(3300);
+		for(m=0;m<step_count;m++) {		
+			stepper();
+			delay_us(3000);
+		}
 	}
-	
 	stopMotor();
 }
 
